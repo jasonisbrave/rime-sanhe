@@ -1,5 +1,13 @@
 # 三合输入法（rime-sanhe）
 
+![版本](https://img.shields.io/badge/版本-v1.0.0-green)
+![许可](https://img.shields.io/badge/许可-CC%20BY%204.0--MIT--BSD--3-blue)
+![引擎](https://img.shields.io/badge/引擎-Rime%20中州韻-red)
+![方案](https://img.shields.io/badge/方案-全拼%20·%20小鹤双拼%20·%20五笔86-orange)
+![平台](https://img.shields.io/badge/平台-Windows%20%7C%20macOS%20%7C%20Linux%20%7C%20Android%20%7C%20iOS-9cf)
+
+> **下载安装包** → [GitCode Releases](https://gitcode.com/jasonisbrave/rime-sanhe/releases)（含打包好的 v1.0.0 zip，克隆本仓库亦可直接部署）
+
 一套基于 [Rime](https://rime.im) 引擎的中文输入方案，内核精简自 [万象拼音](https://github.com/amzxyz/rime_wanxiang)（amzxyz，CC BY 4.0），只保留 **三种输入方案**：
 
 | 方案 | 说明 | 切换方式 |
