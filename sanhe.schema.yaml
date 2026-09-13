@@ -94,6 +94,7 @@ engine:
     - lua_translator@*sanhe.super_symbols  #超级符号库：/sym.arrow.r.double→⇒  /sym?arrow 或 /sym/arrow 模糊搜索  /emoji.xxx 同理
     - table_translator@custom_phrase  #自定义短语 custom_phrase.txt，用于置顶自定义编码候选词
     - lua_translator@*sanhe.super_english*T  #英文词汇表导入，限流，格式化
+    - lua_translator@*sanhe.super_wubi  #五笔召唤beta：输入/w+五笔编码（如/wvbg）直接出五笔候选，注释显示编码
     - table_translator@sanhe_mixedcode  #混合编码词汇表导入
     - reverse_lookup_translator@sanhe_reverse  #挂接部件组字和笔画反查
     - script_translator@add_user_dict  #按需自造词
@@ -191,6 +192,17 @@ sanhe_english:
   spacing_timeout: 5
   max_candidates: 5  #英文候选输出最大候选数(适用于需要选单字组词的用户)
   trigger: "\\"  #英文造词符号\，写一个用时双击
+
+# 五笔召唤（beta）：拼音方案中输入 /w + 五笔编码 直接出五笔候选
+sanhe_wubi:
+  dictionary: wubi86
+  enable_user_dict: false
+  enable_completion: true  #前缀补全
+  enable_sentence: false
+  initial_quality: 2
+  #以下为 super_wubi.lua 读取的配置
+  trigger: "/w"  #召唤前缀（需以 / 开头）
+  max_candidates: 30  #单次最多输出的候选数
 
 sanhe_mixedcode:
   dictionary: sanhe_mixedcode
