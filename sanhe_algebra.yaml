@@ -1,0 +1,532 @@
+# Rime schema
+# encoding: utf-8
+#标准版主方案转写段落
+base:
+  全拼:
+    __append:
+    - xform/Ⅰ//    #用于Lua判断输入类型的标记
+    - xform/^([a-z]+)$/$1④/
+    - xform/ā([a-z]*)$/a$1①/
+    - xform/á([a-z]*)$/a$1②/
+    - xform/ǎ([a-z]*)$/a$1③/
+    - xform/à([a-z]*)$/a$1④/
+    - xform/ō([a-z]*)$/o$1①/
+    - xform/ó([a-z]*)$/o$1②/
+    - xform/ǒ([a-z]*)$/o$1③/
+    - xform/ò([a-z]*)$/o$1④/
+    - xform/ē([a-z]*)$/e$1①/
+    - xform/é([a-z]*)$/e$1②/
+    - xform/ě([a-z]*)$/e$1③/
+    - xform/è([a-z]*)$/e$1④/
+    - xform/ī([a-z]*)$/i$1①/
+    - xform/í([a-z]*)$/i$1②/
+    - xform/ǐ([a-z]*)$/i$1③/
+    - xform/ì([a-z]*)$/i$1④/
+    - xform/ū([a-z]*)$/u$1①/
+    - xform/ú([a-z]*)$/u$1②/
+    - xform/ǔ([a-z]*)$/u$1③/
+    - xform/ù([a-z]*)$/u$1④/
+    - xform/ǖ([a-z]*)$/v$1①/
+    - xform/ǘ([a-z]*)$/v$1②/
+    - xform/ǚ([a-z]*)$/v$1③/
+    - xform/ǜ([a-z]*)$/v$1④/
+    - xform/ü/v/
+    - xform/ń([a-z]*)$/n$1②/
+    - xform/ň([a-z]*)$/n$1③/
+    - xform/ǹ([a-z]*)$/n$1④/
+    - xform/m̄([a-z]*)$/m$1①/
+    - xform/m̄([a-z]*)$/m$1①/
+    - xform/ḿ([a-z]*)$/m$1②/
+    - xform/m̀([a-z]*)$/m$1④/
+    - xlit/①②③④/7890
+    - derive/^ng(\d)$/eng$1/
+    - abbrev/^ng(\d)$/ng/
+    - erase/^ng(\d)$/
+    - xform/^n(\d)/en$1/
+    - xform/^m(\d)/me$1/
+    - abbrev/^([zcs]h).+$/$1/    #zh ch sh作为整体
+    - abbrev/^([zcs]h).+(\d)$/$1$2/    #zh ch sh作为整体
+    - derive/([nl])ve(\d)/$1ue$2/    #让üè兼容ue
+    - derive/^([jqxy])v(\d)$/$1u$2/
+    - derive/^([jqxy])u(\d)$/$1v$2/
+    - abbrev/^([qwrtypsdfghjklzxcbnm]).+$/$1/    #不携带元音的声母派生出首字母简码来
+    - abbrev/^([qwrtypsdfghjklzxcbnm]).+(\d)$/$1$2/    #不携带元音的声母派生出首字母简码来+数字声调
+    - abbrev/^([aoe])([ioun])(\d)$/$1/    #携带两个字符的元音首字母派生出简码来
+    - abbrev/^([aoe])([ioun])(\d)$/$1$3/    #携带两个字符的元音首字母派生出简码来+数字声调
+    - derive/(.+)(\d)/$1/
+    - derive/([zcs])h(a|e|i|u|ai|ei|an|en|ou|uo|ua|un|ui|uan|uai|uang|ang|eng|ong)$/h$1$2/    # hzi → zhi
+    - derive/([zcs])h([aeiu])$/$1$2h/    # zih → zhi
+      # ai
+    - derive/^([wghk])ai$/$1ia/    # wia → wai
+      # ia
+    - derive/([qjx])ia$/$1ai/    # qai → qia
+      # ei
+    - derive/([wtfghkz])ei$/$1ie/
+      # ie
+    - derive/([jqx])ie$/$1ei/
+      # ao
+    - derive/([rtypsdghklzcbnm])ao$/$1oa/
+      # ou
+    - derive/([ypfm])ou$/$1uo/
+      # ang
+    - derive/([wrtypsdfghklzcbnm])ang$/$1nag/
+    - derive/([wrtypsdfghklzcbnm])ang$/$1agn/
+      # eng
+    - derive/([wrtpsdfghklzcbnm])eng$/$1wng/
+    - derive/([wrtpsdfghklzcbnm])eng$/$1neg/
+    - derive/([wrtpsdfghklzcbnm])eng$/$1egn/
+      # ing
+    - derive/([qtypdjlxbnm])ing$/$1nig/
+    - derive/([qtypdjlxbnm])ing$/$1ign/
+      # ong
+    - derive/([rtysdghklzcn])ong$/$1nog/
+    - derive/([rtysdghklzcn])ong$/$1ogn/
+      # iao
+    - derive/([qtpdjlxbnm])iao$/$1ioa/
+    - derive/([qtpdjlxbnm])iao$/$1oia/
+      # ui
+    - derive/([rtsghkzc])ui$/$1iu/
+      # iu
+    - derive/([qjlxnm])iu$/$1ui/
+      # ian
+      # - derive/([qtpdjlxbnm])ian$/$1iam/
+      # iang
+    - derive/([qjlxn])iang$/$1aing/
+    - derive/([qjlxn])iang$/$1inag/
+      # ua
+    - derive/([g|k|h|zh|sh])ua$/$1au/
+      # uai
+    - derive/([g|h|k|zh|ch|sh])uai$/$1aui/
+    - derive/([g|h|k|zh|ch|sh])uai$/$1uia/
+      # un
+    - derive/([qrtysdghjklzxc])un$/$1nu/
+      # ue
+    - derive/([nlyjqx])ue$/$1eu/
+      # uang
+    - derive/([g|h|k|zh|ch|sh])uang$/$1aung/
+    - derive/([g|h|k|zh|ch|sh])uang$/$1uagn/
+    - derive/([g|h|k|zh|ch|sh])uang$/$1unag/
+    - derive/([g|h|k|zh|ch|sh])uang$/$1augn/
+      # iong
+    - derive/([jqx])iong$/$1inog/
+    - derive/([jqx])iong$/$1oing/
+    - derive/([jqx])iong$/$1iogn/
+    - derive/([jqx])iong$/$1oign/
+      # 其他
+    - derive/ong$/on/    # lon → long
+    - derive/([tl])eng$/$1en/    # ten → teng
+
+  小鹤双拼:
+    __append:
+    - xform/Ⅲ//    #用于Lua判断输入类型的标记
+    - xform/^([a-z]+)$/$1④/
+    - xform/ā([a-z]*)$/a$1①/
+    - xform/á([a-z]*)$/a$1②/
+    - xform/ǎ([a-z]*)$/a$1③/
+    - xform/à([a-z]*)$/a$1④/
+    - xform/ō([a-z]*)$/o$1①/
+    - xform/ó([a-z]*)$/o$1②/
+    - xform/ǒ([a-z]*)$/o$1③/
+    - xform/ò([a-z]*)$/o$1④/
+    - xform/ē([a-z]*)$/e$1①/
+    - xform/é([a-z]*)$/e$1②/
+    - xform/ě([a-z]*)$/e$1③/
+    - xform/è([a-z]*)$/e$1④/
+    - xform/ī([a-z]*)$/i$1①/
+    - xform/í([a-z]*)$/i$1②/
+    - xform/ǐ([a-z]*)$/i$1③/
+    - xform/ì([a-z]*)$/i$1④/
+    - xform/ū([a-z]*)$/u$1①/
+    - xform/ú([a-z]*)$/u$1②/
+    - xform/ǔ([a-z]*)$/u$1③/
+    - xform/ù([a-z]*)$/u$1④/
+    - xform/ǖ([a-z]*)$/v$1①/
+    - xform/ǘ([a-z]*)$/v$1②/
+    - xform/ǚ([a-z]*)$/v$1③/
+    - xform/ǜ([a-z]*)$/v$1④/
+    - xform/ü/v/
+    - xform/ń([a-z]*)$/n$1②/
+    - xform/ň([a-z]*)$/n$1③/
+    - xform/ǹ([a-z]*)$/n$1④/
+    - xform/m̄([a-z]*)$/m$1①/
+    - xform/ḿ([a-z]*)$/m$1②/
+    - xform/m̀([a-z]*)$/m$1④/
+    - xlit/①②③④/7890
+    - derive/^ng(\d)$/eng$1/
+    - xform/^n(\d)/en$1/
+    - xform/^m(\d)/me$1/
+    - derive/^([jqxy])u(\d)$/$1v$2/
+    - derive/^([aoe])([ioun])(\d)$/$1$1$2$3/
+    - xform/^([aoe])(ng)?(\d)$/$1$1$2$3/
+    - xform/iu(\d)$/Ⓠ$1/
+    - xform/(.)ei(\d)$/$1Ⓦ$2/
+    - xform/uan(\d)$/Ⓡ$1/
+    - xform/[uv]e(\d)$/Ⓣ$1/
+    - xform/un(\d)$/Ⓨ$1/
+    - xform/^sh/Ⓤ/
+    - xform/^ch/Ⓘ/
+    - xform/^zh/Ⓥ/
+    - xform/uo(\d)$/Ⓞ$1/
+    - xform/ie(\d)$/Ⓟ$1/
+    - xform/(.)i?ong(\d)$/$1Ⓢ$2/
+    - xform/ing(\d)$/Ⓚ$1/
+    - xform/uai(\d)$/Ⓚ$1/
+    - xform/(.)ai(\d)$/$1Ⓓ$2/
+    - xform/(.)eng(\d)$/$1Ⓖ$2/
+    - xform/(.)en(\d)$/$1Ⓕ$2/
+    - xform/[iu]ang(\d)$/Ⓛ$1/
+    - xform/(.)ang(\d)$/$1Ⓗ$2/
+    - xform/ian(\d)$/Ⓜ$1/
+    - xform/(.)an(\d)$/$1Ⓙ$2/
+    - xform/(.)ou(\d)$/$1Ⓩ$2/
+    - xform/[iu]a(\d)$/Ⓧ$1/
+    - xform/iao(\d)$/Ⓝ$1/
+    - xform/(.)ao(\d)$/$1Ⓒ$2/
+    - xform/ui(\d)$/Ⓥ$1/
+    - xform/in(\d)$/Ⓑ$1/
+    - xlit/ⓆⓌⓇⓉⓎⓊⒾⓄⓅⓈⒹⒻⒼⒽⒿⓀⓁⓏⓍⒸⓋⒷⓃⓂ/qwrtyuiopsdfghjklzxcvbnm/
+    - xform/^(aj|ac|ad|ew|ef|oz)(\d?)$//
+    - derive/^(..)(\d)$/$1/
+    - derive/^(.).+(\d)$/$1$2/
+      #- abbrev/^([a-z]).+$/$1/   #简拼
+
+reverse:
+  hspzn:
+    __append:
+    - xlit/HSPZN/hspzn/
+  全拼:
+  - xform/'//
+  - derive/^([nl])ue$/$1ve/
+  - derive/'([nl])ue$/'$1ve/
+  - derive/^([jqxy])u/$1v/
+  - derive/'([jqxy])u/'$1v/
+  小鹤双拼:
+  - derive/^([jqxy])u(?=^|$|')/$1v/
+  - derive/'([jqxy])u(?=^|$|')/'$1v/
+  - derive/^([aoe])([ioun])(?=^|$|')/$1$1$2/
+  - derive/'([aoe])([ioun])(?=^|$|')/'$1$1$2/
+  - xform/^([aoe])(ng)?(?=^|$|')/$1$1$2/
+  - xform/'([aoe])(ng)?(?=^|$|')/'$1$1$2/
+  - xform/iu(?=^|$|')/<q>/
+  - xform/(.)ei(?=^|$|')/$1<w>/
+  - xform/uan(?=^|$|')/<r>/
+  - xform/[uv]e(?=^|$|')/<t>/
+  - xform/un(?=^|$|')/<y>/
+  - xform/^sh/<u>/
+  - xform/^ch/<i>/
+  - xform/^zh/<v>/
+  - xform/'sh/'<u>/
+  - xform/'ch/'<i>/
+  - xform/'zh/'<v>/
+  - xform/uo(?=^|$|')/<o>/
+  - xform/ie(?=^|$|')/<p>/
+  - xform/([a-z>])i?ong(?=^|$|')/$1<s>/
+  - xform/ing(?=^|$|')|uai(?=^|$|')/<k>/
+  - xform/([a-z>])ai(?=^|$|')/$1<d>/
+  - xform/([a-z>])en(?=^|$|')/$1<f>/
+  - xform/([a-z>])eng(?=^|$|')/$1<g>/
+  - xform/[iu]ang(?=^|$|')/<l>/
+  - xform/([a-z>])ang(?=^|$|')/$1<h>/
+  - xform/ian(?=^|$|')/<m>/
+  - xform/([a-z>])an(?=^|$|')/$1<j>/
+  - xform/([a-z>])ou(?=^|$|')/$1<z>/
+  - xform/[iu]a(?=^|$|')/<x>/
+  - xform/iao(?=^|$|')/<n>/
+  - xform/([a-z>])ao(?=^|$|')/$1<c>/
+  - xform/ui(?=^|$|')/<v>/
+  - xform/in(?=^|$|')/<b>/
+  - xform/'|<|>//
+
+mixed:
+  通用派生规则:
+  - derive|^([A-Z].{1,2})$|$1/|
+    # 数字派生，先将整数类派生出英文写法
+  - derive/(?<!\d)1([1-9])(?!\d)/'shí'$1/
+  - derive/([1-9])0000(?!0)/$1'wàn'/
+  - derive/([1-9])000(?!0)/$1'qiān'/
+  - derive/([1-9])00(?!0)/$1'bǎi'/
+  - derive/([2-9])0(?!0)/$1'shí'/
+  - derive/(?<!\d)([2-9])([1-9])(?!\d)/$1'shí'$2/
+  - derive/1([4-7|9])/$1'teen'/
+  - derive/11/'eleven'/
+  - derive/12/'twelve'/
+  - derive/13/'thirteen'/
+  - derive/15/'fifteen'/
+  - derive/18/'eighteen'/
+  - derive/0/o/
+  - derive/0/O/
+  - derive/0/'zero'/
+  - derive/1/'one'/
+  - derive/10/'ten'/
+  - derive/2/'to'/
+  - derive/2/'two'/
+  - derive/3/'three'/
+  - derive/4/'for'/
+  - derive/4/'four'/
+  - derive/5/'five'/
+  - derive/6/'six'/
+  - derive/7/'seven'/
+  - derive/8/'eight'/
+  - derive/9/'nine'/
+  - derive/10/'shí'/
+  - derive/0/'líng'/
+  - derive/1/'yī'/
+  - derive/2/'èr'/
+  - derive/3/'sān'/
+  - derive/4/'sì'/
+  - derive/5/'wǔ'/
+  - derive/6/'liù'/
+  - derive/7/'qī'/
+  - derive/8/'bā'/
+  - derive/9/'jiǔ'/
+    # 符号派生，将编码中的符号，该消失的消失，该转换为名称的转换为名称
+  - derive/\+/'plus'/
+  - derive/\./'dot'/
+  - derive/@/'at'/
+  - derive/-/'hyphen'/
+  - derive/#/'hash'/
+  - derive/#/'number'/
+  - derive/#/'sharp'/
+  - derive/♯/'sharp'/
+  - derive / 'slash'
+  - derive/&/'and'/
+  - derive/%/'percent'/
+    # 派生单个特殊字符需要消失的转换为'分隔符，需要转换为拼音的放在具体的输入布局转写中
+  - derive/--/'jiǎn'jiǎn'/    #两个连续减号转换为jiǎn'jiǎn
+  - derive/^(.*)-$/$1'jiǎn/    #单个减号末尾的转换为jiǎn
+  - derive/-/'/    #中间减号一般无意义，转换为分隔符以忽略
+  - derive/_/'/
+  - derive/\./'diǎn'/
+  - derive/\+/'jiā'/
+  - derive/·/'/
+  - derive/#/'jǐng'/
+  - derive/[@]/'ài'tè'/
+  - derive/[@]/'quān'a'/
+  - xform/'+/'/
+  - xform/^'(.*)$/$1/
+  - xform/^(.*)'$/$1/
+  - derive/^.+$/\U$0/
+  全拼:
+    __append:
+    - xlit/āáǎàōóǒòēéěèīíǐìūúǔùǖǘǚǜü/aaaaooooeeeeiiiiuuuuvvvvv/
+    - xform/'//
+    - derive/^([nl])ue$/$1ve/
+    - derive/'([nl])ue$/'$1ve/
+    - derive/^([jqxy])u/$1v/
+    - derive/'([jqxy])u/'$1v/
+    - derive/^.+$/\L$0/
+    - derive/^([A-Z]{1})/\L$1/
+    - derive/^([a-z]{2})/\U$1/
+    - erase/.*[\-+'_#@\.·0-9].*$/
+  小鹤双拼:
+    __append:
+    - xlit/āáǎàōóǒòēéěèīíǐìūúǔùǖǘǚǜü/aaaaooooeeeeiiiiuuuuvvvvv/
+    - derive/('|^)([jqxy])u(?=^|$|')/$1$2v/
+    - derive/('|^)([aoe])([ioun])(?=^|$|')/$1$2$2$3/
+    - xform/('|^)([aoe])(ng)?(?=^|$|')/$1$2$2$3/
+    - xform/('|^)([qdjlxnm])iu(?=^|$|')/$1$2<q>/
+    - xform/('|^)([qyjlxn])[uv]e(?=^|$|')/$1$2<t>/
+    - xform/^sh/<u>/
+    - xform/^ch/<i>/
+    - xform/^zh/<v>/
+    - xform/'sh/'<u>/
+    - xform/'ch/'<i>/
+    - xform/'zh/'<v>/
+    - xform/('|^)((?:<v>|[aoewtpdfghklzvbnm]))ei(?=^|$|')/$1$2<w>/
+    - xform/('|^)((?:<v>|<i>|<u>|[qrtysdghjklzxc]))un(?=^|$|')/$1$2<y>/
+    - xform/('|^)((?:<v>|<i>|<u>|[qrtysdghjklzxcn]))uan(?=^|$|')/$1$2<r>/
+    - xform/('|^)((?:<v>|<i>|<u>|[tsdghklzcn]))uo(?=^|$|')/$1$2<o>/
+    - xform/('|^)([qtpdjlxbnm])ie(?=^|$|')/$1$2<p>/
+    - xform/('|^)((?:<v>|<i>|[qrtysdghjklzxcn]))i?ong(?=^|$|')/$1$2<s>/
+    - xform/('|^)([qtypdjlxnm])ing(?=^|$|')|('|^)((?:<i>|<u>|[gh]))uai(?=^|$|')/$1$2<k>/
+    - xform/('|^)((?:<i>|<u>|[aoewtpsdghklzcbnm]))ai(?=^|$|')/$1$2<d>/
+    - xform/('|^)((?:<v>|<i>|<u>|[wrtpsdfghkzcbnm]))en(?=^|$|')/$1$2<f>/
+    - xform/('|^)((?:<v>|<i>|<u>|[wrtpsdfghklzcbnm]))eng(?=^|$|')/$1$2<g>/
+    - xform/('|^)((?:<v>|<i>|<u>|[aoeqghjkxbnl]))[iu]ang(?=^|$|')/$1$2<l>/
+    - xform/('|^)((?:<v>|<i>|<u>|[wrtypsdfghklzcbnm]))ang(?=^|$|')/$1$2<h>/
+    - xform/('|^)([qtpdjlxbnm])ian(?=^|$|')/$1$2<m>/
+    - xform/('|^)((?:<v>|<i>|<u>|[wrtypsdfghklzcbnm]))an(?=^|$|')/$1$2<j>/
+    - xform/('|^)((?:<v>|<i>|<u>|[rtypsdfghklzm]))ou(?=^|$|')/$1$2<z>/
+    - xform/('|^)([tghkljx])[iu]a(?=^|$|')/$1$2<x>/
+    - xform/('|^)([qtpdjlxbnm])iao(?=^|$|')/$1$2<n>/
+    - xform/('|^)((?:<v>|<i>|<u>|[rtypsdghklzcbnm]))ao(?=^|$|')/$1$2<c>/
+    - xform/('|^)((?:<v>|<i>|<u>|[tsdghkzc]))ui(?=^|$|')/$1$2<v>/
+    - xform/('|^)([qypjlmnbx])in(?=^|$|')/$1$2<b>/
+    - xform/'|<|>//
+    - derive/^.+$/\L$0/
+    - derive/^([A-Z]{1})/\L$1/
+    - derive/^([a-z]{2})/\U$1/
+    - erase/.*[\-+'_#@\.·0-9].*$/
+english:
+  通用规则:
+  - derive|^(.{1,3})$|$1/|
+  - derive/1([4-7|9])/$1teen/
+  - derive/11/eleven/
+  - derive/12/twelve/
+  - derive/13/thirteen/
+  - derive/15/fifteen/
+  - derive/18/eighteen/
+  - derive/0/o/
+  - derive/0/O/
+  - derive/0/zero/
+  - derive/1/one/
+  - derive/10/ten/
+  - derive/2/to/
+  - derive/2/two/
+  - derive/3/three/
+  - derive/4/for/
+  - derive/4/four/
+  - derive/5/five/
+  - derive/6/six/
+  - derive/7/seven/
+  - derive/8/eight/
+  - derive/9/nine/
+  - derive/[.]//
+  - derive/[+]//
+  - derive/[@]//
+  - derive/[-]//
+  - derive/[_]//
+  - derive/^.+$/\L$0/
+  - derive/^.+$/\U$0/
+  - derive/^./\U$0/
+  - derive/^([a-z]{2})/\U$1/
+
+  全拼:
+    __append:
+    - derive/(?<!\d)1([1-9])(?!\d)/shi$1/
+    - derive/([1-9])0000(?!0)/$1wan/
+    - derive/([1-9])000(?!0)/$1qian/
+    - derive/([1-9])00(?!0)/$1bai/
+    - derive/([2-9])0(?!0)/$1shi/
+    - derive/(?<!\d)([2-9])([1-9])(?!\d)/$1shi$2/
+    - derive/\./dian/
+    - derive/10/shi/
+    - derive/0/ling/
+    - derive/1/yi/
+    - derive/2/er/
+    - derive/2/liang/
+    - derive/3/san/
+    - derive/4/si/
+    - derive/5/wu/
+    - derive/6/liu/
+    - derive/7/qi/
+    - derive/8/ba/
+    - derive/9/jiu/
+    - derive/\+/jia/
+    - derive/#/jing/
+    - erase/.*[0-9].*/
+  小鹤双拼:
+    __append:
+    - derive/(?<!\d)1([1-9])(?!\d)/ui$1/
+    - derive/([1-9])0000(?!0)/$1wj/
+    - derive/([1-9])000(?!0)/$1qm/
+    - derive/([1-9])00(?!0)/$1bd/
+    - derive/([2-9])0(?!0)/$1ui/
+    - derive/(?<!\d)([2-9])([1-9])(?!\d)/$1ui$2/
+    - derive/\./dm/
+    - derive/10/ui/
+    - derive/0/lk/
+    - derive/1/yi/
+    - derive/2/er/
+    - derive/2/ll/
+    - derive/3/sj/
+    - derive/4/si/
+    - derive/5/wu/
+    - derive/6/lq/
+    - derive/7/qi/
+    - derive/8/ba/
+    - derive/9/jq/
+    - derive/\+/jx/
+    - derive/#/jk/
+    - erase/.*[0-9].*/
+模糊音_nl:
+  __append:
+    # n - l
+  - derive/^l/n
+  - derive/^n/l
+
+模糊音_ry:
+  __append:
+    # r - y 开头
+  - derive/^y/r
+  - derive/^r/y
+
+模糊音_hf:
+  __append:
+    # h - f 开头
+  - derive/^h/f
+  - derive/^f/h
+
+模糊音_rl:
+  __append:
+    # r - l 开头
+  - derive/^r/l
+  - derive/^l/r
+
+模糊音_kg:
+  __append:
+    # k - g 开头
+  - derive/^k/g
+  - derive/^g/k
+
+模糊音_en_eng:
+  __append:
+    # en - eng
+  - derive/(ē|é|ě|è|e)ng(.*)$/$1n$2
+  - derive/(ē|é|ě|è|e)n([^g].*)?$/$1ng$2
+
+模糊音_in_ing:
+  __append:
+    # in - ing
+  - derive/(ī|í|ǐ|ì|i)ng(.*)$/$1n$2
+  - derive/(ī|í|ǐ|ì|i)n([^g].*)?$/$1ng$2
+
+模糊音_c_ch:
+  __append:
+  - derive/^ch/c
+  - derive/^c([^h]*)/ch$1
+
+模糊音_z_zh:
+  __append:
+  - derive/^zh/z
+  - derive/^z([^h]*)/zh$1
+
+模糊音_s_sh:
+  __append:
+  - derive/^sh/s
+  - derive/^s([^h]*)/sh$1
+#特殊优化：部分音节字极少，几乎不参与构词，则提升对应四码字的优先级，仅对小鹤双拼有效，其他双拼方案需作对应修改）
+小鹤双拼提权:
+  __append:
+  - derive/^(.*?)(\d?);(bl|dx|df|eg|fn|kw|ny|tw|vw|yd|rx|fs|ix|eq)$/$1$3/
+  - derive/^(.*?)(\d?);.*?,(bl|dx|df|eg|fn|kw|ny|tw|vw|yd|rx|fs|ix|eq)$/$1$3/
+#特殊优化：部分音节字极少，几乎不参与构词，则提升对应四码字的优先级，仅对自然码有效，其他双拼方案需作对应修改）
+自然码提权:
+  __append:
+  - derive/^(.*?)(\d?);(jb|wq|aq|av|dn|xh|bv|jz|hm|sn|cd|iw|xl|ak|zy|fy|uz|yx|wb|wr|yw|qz|ms|at|xf|gi|gn|or|ux|ww|nw|fs|qk|rl|cq|sw|jv|cy|sq|dd|fp|ae|ix|td|ep|ar|wm|pd|et|yz|eh|ct|os|hx|zq|ew|fm|ab|kc|tf|fx|we|sz|wx|bq|ic|ez|bs|ej|oh|ps|pw|fr|pq|au|wc|wp|dt|qf|zc|vx|im|br|mw|un|qb|fi|zm|vn|oz|kt|rq|ay|fn|yc|um|eq|eu|cz|yq|tq|oi|ek|az|fv|zx|ut|vz|ry|ac|ws|af|qv|ea|qj|al|ol|on|sx|ap|df|eg|rz|ey|em|ag|hi|iz|ki|xz|xj|ad|ft|pt|op|vt|oj|kn|pr|hq|eb|ev|cx|zd|am|ov|oq|ym|ef|ot|mr|rd|sy|oc|rc|oe|fq|cn|ok|rn|bp|yv|uc|wk|oy|bt|je|ow|xg|jj|rw|pp|ja|wt|lf|xe|wy|kx|sm|qe|fw|gc|xa|cw|zn|tn|cc|jo|md|sd|ql|kq|it|bd|sc|wv|fc|dw|ob|vm|ed|jl|xo|fl|gq|gt|of|pv|wd|qa|xk|yd|fe|og|iq|oa|uq|om|xv|mv|as|ox|km|zt|od|ht|el|hn|st|wn|mt|wi|tz|aj|yg|bw|jf|jg|kz|es|xb|ax|rt|gx|bb|qo|yf|ex|rx|tt|us|qg|pe|zw|mp|qh|rm|hc|np|jh|cm|yl|eo|ra|vc|aw|tw|fk|gm|ec|be|vq|fd|jk|in)$/$1$3/
+  - derive/^(.*?)(\d?);.*?,(jb|wq|aq|av|dn|xh|bv|jz|hm|sn|cd|iw|xl|ak|zy|fy|uz|yx|wb|wr|yw|qz|ms|at|xf|gi|gn|or|ux|ww|nw|fs|qk|rl|cq|sw|jv|cy|sq|dd|fp|ae|ix|td|ep|ar|wm|pd|et|yz|eh|ct|os|hx|zq|ew|fm|ab|kc|tf|fx|we|sz|wx|bq|ic|ez|bs|ej|oh|ps|pw|fr|pq|au|wc|wp|dt|qf|zc|vx|im|br|mw|un|qb|fi|zm|vn|oz|kt|rq|ay|fn|yc|um|eq|eu|cz|yq|tq|oi|ek|az|fv|zx|ut|vz|ry|ac|ws|af|qv|ea|qj|al|ol|on|sx|ap|df|eg|rz|ey|em|ag|hi|iz|ki|xz|xj|ad|ft|pt|op|vt|oj|kn|pr|hq|eb|ev|cx|zd|am|ov|oq|ym|ef|ot|mr|rd|sy|oc|rc|oe|fq|cn|ok|rn|bp|yv|uc|wk|oy|bt|je|ow|xg|jj|rw|pp|ja|wt|lf|xe|wy|kx|sm|qe|fw|gc|xa|cw|zn|tn|cc|jo|md|sd|ql|kq|it|bd|sc|wv|fc|dw|ob|vm|ed|jl|xo|fl|gq|gt|of|pv|wd|qa|xk|yd|fe|og|iq|oa|uq|om|xv|mv|as|ox|km|zt|od|ht|el|hn|st|wn|mt|wi|tz|aj|yg|bw|jf|jg|kz|es|xb|ax|rt|gx|bb|qo|yf|ex|rx|tt|us|qg|pe|zw|mp|qh|rm|hc|np|jh|cm|yl|eo|ra|vc|aw|tw|fk|gm|ec|be|vq|fd|jk|in)$/$1$3/
+
+#使用方案跟在拼写运算后面
+18jian:
+  __append:
+  - derive/(.*)/\U$1/
+  - xlit/QWERTYUIOPASDFGHJKLZXCVBNM/qwwrryuiipassffhjjlzxxvbbm
+14jian:
+  __append:
+  - derive/(.*)/\U$1/
+  - xlit/QWERTYUIOPASDFGHJKLZXCVBNM/qqeettuuooaaddggjjlzzccbbm
+9jian:
+  __append:
+  - xform/ⅱ//    # 用于 Lua 判断输入类型的标记
+  - xform/^(.*);.*$/$1/
+  - xlit/āáǎàōóǒòēéěèīíǐìūúǔùǖǘǚǜüńňǹ/aaaaooooeeeeiiiiuuuuvvvvvnnn/
+  - xform/ḿ/me/
+  - xform/m̀/me/
+  - derive/^ng$/eng/
+  - xform/^n$/en/
+  - derive/^(.*)$/\U$1/    # 转换为大写，为后续数字映射做准备
+  - derive/^([nl])ve$/$1ue/
+  - derive/^([NL])VE$/$1UE/
+  - derive/^([jqxy])u/$1v/
+  - derive/^([JQXY])U/$1V/
+  - xlit/ABCDEFGHIJKLMNOPQRSTUVWXYZ/22233344455566677778889999/    # 标准九宫格数字映射

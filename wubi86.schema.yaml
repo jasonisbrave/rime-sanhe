@@ -1,0 +1,94 @@
+# Rime schema
+# encoding: utf-8
+# 三合输入法 · 五笔86方案
+# 码表源自 rime/rime-wubi（极点86版，MIT License）
+schema:
+  schema_id: wubi86
+  name: 五笔86
+  version: "1.0"
+  author:
+    - 王永民（五笔字型发明人）
+  description: |
+    三合输入法配套的五笔86方案。
+    · z 键进入拼音反查，可查任意汉字的五笔编码
+    · 支持 custom_phrase.txt 自定义短语置顶
+    · 连续上屏自动造词（最多4字）
+    · 切换回拼音方案：状态面板（Ctrl+`）或 F4 选单
+  dependencies:
+    - pinyin_reverse
+
+switches:
+  - name: ascii_mode
+    states: [中文, 英文]
+    reset: 0
+  - name: ascii_punct
+    states: [中标, 英标]
+    reset: 0
+  - name: full_shape
+    states: [半角, 全角]
+    reset: 0
+  - name: extended_charset
+    states: [常用, 扩展]
+    reset: 0
+
+engine:
+  processors:
+    - ascii_composer
+    - recognizer
+    - key_binder
+    - speller
+    - punctuator
+    - selector
+    - navigator
+    - express_editor
+  segmentors:
+    - ascii_segmentor
+    - matcher
+    - abc_segmentor
+    - punct_segmentor
+    - fallback_segmentor
+  translators:
+    - punct_translator
+    - reverse_lookup_translator
+    - table_translator
+    - table_translator@custom_phrase
+
+speller:
+  delimiter: " '"
+
+translator:
+  dictionary: wubi86
+  enable_charset_filter: true
+  enable_sentence: true
+  enable_encoder: true
+  encode_commit_history: true
+  max_phrase_length: 4
+  disable_user_dict_for_patterns:
+    - "^z.*$"
+
+custom_phrase:
+  dictionary: ""
+  user_dict: custom_phrase
+  db_class: stabledb
+  enable_completion: false
+  enable_sentence: false
+  initial_quality: 99
+
+reverse_lookup:
+  dictionary: pinyin_reverse
+  prefix: "z"
+  suffix: "'"
+  tips: 〔拼音〕
+  preedit_format:
+    - xform/([nl])v/$1ü/
+    - xform/([nl])ue/$1üe/
+    - xform/([jqxy])v/$1u/
+
+punctuator:
+  import_preset: symbols
+
+key_binder:
+  import_preset: default
+
+recognizer:
+  import_preset: default
