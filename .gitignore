@@ -8,5 +8,5 @@ sync/
 *.userdb/
 installation.yaml
 user.yaml
-*.custom.yaml
+/*.custom.yaml
 .DS_Store
