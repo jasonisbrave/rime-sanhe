@@ -115,11 +115,14 @@ local function translator(input, seg, env)
         main_file,
     }
 
+    local written = {}
+
     for _, name in ipairs(files) do
         local dest = user_dir .. "/" .. name
 
         if name == main_file and main_exists then
             replace_schema(dest, target_schema, profile)
+            written[name] = true
         else
             local src = shared_dir .. "/custom/" .. name
             if not file_exists(src) then
@@ -128,8 +131,15 @@ local function translator(input, seg, env)
 
             if file_exists(src) and copy_file(src, dest) then
                 replace_schema(dest, target_schema, profile)
+                written[name] = true
             end
         end
+    end
+
+    if not written[main_file] then
+        yield(Candidate("switch", seg.start, seg._end,
+            "未找到切换模板（custom/" .. main_file .. "），配置未写入，请检查安装是否完整", ""))
+        return
     end
 
     local msg = main_exists
