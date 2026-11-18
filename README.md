@@ -1,117 +1,143 @@
 # 三合输入法（rime-sanhe）
 
-![版本](https://img.shields.io/badge/版本-v1.0.0-green)
-![许可](https://img.shields.io/badge/许可-CC%20BY%204.0--MIT--BSD--3-blue)
-![引擎](https://img.shields.io/badge/引擎-Rime%20中州韻-red)
-![方案](https://img.shields.io/badge/方案-全拼%20·%20小鹤双拼%20·%20五笔86-orange)
-![平台](https://img.shields.io/badge/平台-Windows%20%7C%20macOS%20%7C%20Linux%20%7C%20Android%20%7C%20iOS-9cf)
+一套基于 [Rime](https://rime.im) 的中文输入方案，面向全拼、小鹤双拼和五笔 86 用户。内核精简自 [万象拼音](https://github.com/amzxyz/rime_wanxiang)，保留带调词库、智能纠错、反查和 Lua 增强等能力。
 
-> **下载安装包 v1.0.0** → [GitHub 直链](https://github.com/jasonisbrave/rime-sanhe/releases/download/v1.0.0/rime-sanhe-v1.0.0.zip) · [GitHub Releases](https://github.com/jasonisbrave/rime-sanhe/releases) · [GitCode Releases](https://gitcode.com/jasonisbrave/rime-sanhe/releases)（克隆本仓库亦可直接部署）
+> **快速安装：** 下载 [v1.1.0-beta1 安装包](https://github.com/jasonisbrave/rime-sanhe/releases/download/v1.1.0-beta1/rime-sanhe-v1.1.0-beta1.zip)（当前预发布版），解压后将 `rime-sanhe/` 内的全部文件复制到 Rime 用户目录，再重新部署。也可将本仓库完整克隆到用户目录。
+>
+> 其他下载入口：[GitHub Releases](https://github.com/jasonisbrave/rime-sanhe/releases) · [GitCode Releases](https://gitcode.com/jasonisbrave/rime-sanhe/releases)。详细步骤见 [安装与部署](#安装与部署)。
 
-一套基于 [Rime](https://rime.im) 引擎的中文输入方案，内核精简自 [万象拼音](https://github.com/amzxyz/rime_wanxiang)（amzxyz，CC BY 4.0），只保留 **三种输入方案**：
+[![版本](https://img.shields.io/badge/版本-v1.1.0--beta1-green)](https://github.com/jasonisbrave/rime-sanhe/releases/tag/v1.1.0-beta1)
+[![许可](https://img.shields.io/badge/许可-CC%20BY%204.0-blue)](LICENSE)
+[![引擎](https://img.shields.io/badge/引擎-Rime%20中州韻-red)](https://rime.im)
+[![方案](https://img.shields.io/badge/方案-全拼%20·%20小鹤双拼%20·%20五笔86-orange)](#输入方案)
+[![平台](https://img.shields.io/badge/平台-Windows%20%7C%20macOS%20%7C%20Linux%20%7C%20Android%20%7C%20iOS-9cf)](#安装与部署)
+
+## 输入方案
 
 | 方案 | 说明 | 切换方式 |
-|------|------|----------|
-| **三合拼音·全拼** | 带调词库、智能纠错、简拼、整句输入 | 默认方案 |
-| **三合拼音·小鹤双拼** | 与全拼共用词库和全部智能功能 | 输入 `/flypy`；切回全拼输入 `/pinyin` |
-| **五笔86** | 极点86码表，独立方案 | `F4` 或状态面板（`Ctrl+``）选单 |
+| --- | --- | --- |
+| **三合拼音 · 全拼** | 带调词库，支持智能纠错、简拼和整句输入 | 默认方案 |
+| **三合拼音 · 小鹤双拼** | 与全拼共用词库和智能功能 | 输入 `/flypy`；输入 `/pinyin` 切回全拼 |
+| **五笔 86** | 极点 86 码表，作为独立方案使用 | 按 `F4` 或 ``Ctrl+` `` 打开状态面板选择 |
 
-拼音方案与五笔方案**共享同一套用户词库管理习惯**（custom_phrase.txt 自定义短语），但各自独立记词。
+拼音与五笔 86 共用 `custom_phrase.txt` 维护置顶短语，自动学习的用户词库则彼此独立。
 
-## 主要特性（拼音方案）
+## 拼音方案特性
 
-- 带调全拼词库，支持声调辅助筛选：`7`/`8`/`9`/`0` 对应一/二/三/四声，连按自动覆盖（不确定声调就 7890 连按）
-- 智能纠错：错音、错字兼容（如 `zhidao`→知道、`jandan`→简单）
-- 拆字与笔画反查：输入 `` ` `` 进入拆字反查
-- 中英混输：直接打英文单词、自动识别
-- 拆分输入、超级注释、时间日期（`\rq`）、计算器、符号大全（`/fh`）等 Lua 增强
-- 五笔召唤（beta）：拼音流输入 `/w+编码`（如 `/wvbg`）直接出五笔候选，注释显示完整编码，边打边学码
-- 语法模型（可选，见下文）：整句输入质量大幅提升
+- **带调词库与声调筛选**：`7` / `8` / `9` / `0` 分别对应一、二、三、四声，连按可自动覆盖；不确定声调时，可依次按下 `7`、`8`、`9`、`0`
+- **智能纠错**：兼容常见错音、错字，同时支持简拼和整句输入
+- **拆字与笔画反查**：输入反引号（`` ` ``）进入反查
+- **中英混输**：可直接输入英文单词，自动识别中英文混合内容
+- **Lua 增强**：提供拆分输入、超级注释、日期时间（`\rq`）、计算器、符号大全（`/fh`）等功能
+- **五笔召唤（beta）**：在拼音方案中输入 `/w` + 五笔编码（如 `/wvbg`），直接显示五笔候选，并在注释中显示完整编码
+- **可选语法模型**：改善长句输入效果，启用方法见下文
 
-## 安装
+## 安装与部署
 
-将本目录（或解压后的 `rime-sanhe/`）中**所有文件**复制到 Rime 用户目录：
+### 1. 复制文件
+
+将本仓库（或解压后的 `rime-sanhe/`）中的全部文件和子目录复制到 Rime 用户目录：
 
 | 平台 | 输入法 | 用户目录 |
-|------|--------|----------|
-| Windows | 小狼毫 weasel | `%APPDATA%\Rime` |
-| macOS | 鼠鬚管 squirrel | `~/Library/Rime` |
+| --- | --- | --- |
+| Windows | 小狼毫（Weasel） | `%APPDATA%\Rime` |
+| macOS | 鼠鬚管（Squirrel） | `~/Library/Rime` |
 | Linux | fcitx5-rime | `~/.local/share/fcitx5/rime` |
 | Linux | ibus-rime | `~/.config/ibus/rime` |
-| Android | 同文 / Hamsters | 应用内用户目录 |
-| iOS | 仓输入法 | 应用内用户目录 |
+| Android | 同文输入法（Trime） | 应用内用户目录 |
+| iOS | 仓输入法（Hamster） | 应用内用户目录 |
 
-然后**重新部署**：
-- Windows：右键托盘图标 →「重新部署」
-- macOS：菜单栏输入法图标 →「重新部署」
-- Linux fcitx5：`fcitx5-remote -r` 或配置工具中点击部署
+### 2. 重新部署
 
-首次部署需要编译词库（约 20 万词条），请耐心等待 1-3 分钟。
+- **Windows**：右键单击托盘图标，选择「重新部署」
+- **macOS**：单击菜单栏输入法图标，选择「重新部署」
+- **Linux（fcitx5）**：执行 `fcitx5-remote -r`，或在配置工具中点击「部署」
 
-### 首次使用拼音双拼切换
+首次部署需要编译词库，请耐心等待。
 
-输入 `/flypy` 候选栏会出现「已切换到〔小鹤双拼〕」，按提示**再次重新部署**即可生效；
-切回全拼输入 `/pinyin`，同样重新部署。
+### 3. 切换全拼与小鹤双拼
 
-> 双拼切换会改写用户目录下的 `sanhe.custom.yaml` 等文件，属于正常现象。
+1. 在拼音方案中输入 `/flypy`，候选栏会出现切换到小鹤双拼的提示。
+2. 再次重新部署，使切换生效。
+3. 需要切回全拼时，输入 `/pinyin`，然后重新部署。
 
-## 开启语法模型（可选，强烈推荐）
+> 切换方案会改写用户目录下的 `sanhe.custom.yaml` 等文件，属于正常现象。请保留 `custom/` 中的切换模板。
 
-语法模型（400MB）能显著提升长句输入准确率：
+## 启用语法模型（可选）
 
-1. 下载模型：https://github.com/amzxyz/RIME-LMDG/releases （`LTS` 版中的 `wanxiang-lts-zh-hans.gram`）
-2. 将 `.gram` 文件放入 Rime 用户目录
-3. 打开 `sanhe.schema.yaml`，找到 `# grammar:` 一段，取消注释（第 113-116 行附近）
-4. 重新部署
+语法模型约 400 MB，可改善长句输入准确率：
 
-不启用语法模型时一切功能正常，仅长句候选稍逊。
+1. 从 [RIME-LMDG 的 LTS Release](https://github.com/amzxyz/RIME-LMDG/releases/tag/LTS) 下载 `wanxiang-lts-zh-hans.gram`。
+2. 将 `.gram` 文件放入 Rime 用户目录。
+3. 打开 `sanhe.schema.yaml`，搜索 `# grammar:`，取消 `grammar:` 和 `language: wanxiang-lts-zh-hans` 两行的注释。
+4. 重新部署。
+
+不启用语法模型时，其余功能不受影响，仅长句候选效果可能稍逊。
 
 ## 自定义
 
 ### 模糊音
-编辑用户目录下的 `sanhe.custom.yaml`，取消对应行注释，如 `z/zh` 模糊音取消注释 `- sanhe_algebra:/模糊音_z_zh`，然后重新部署。
+
+将 `custom/sanhe.custom.yaml` 复制到 Rime 用户目录根目录；如果之前切换过全拼或小鹤双拼，该文件通常已经生成。
+
+编辑用户目录下的 `sanhe.custom.yaml`，找到需要的模糊音规则并取消注释。例如，启用 `z` / `zh` 模糊音：
+
+```yaml
+- sanhe_algebra:/模糊音_z_zh
+```
+
+保存后重新部署。
 
 ### 自定义短语
-编辑 `custom_phrase.txt`，格式：`短语\t编码\t权重`，如：
 
-```
-邮箱      yx      1
-三合输入法   shsr    1
+编辑 Rime 用户目录下的 `custom_phrase.txt`。每项一行，依次填写短语、编码和权重，并使用 Tab 分隔：
+
+```text
+邮箱	yx	1
+三合输入法	shsr	1
 ```
 
-### 五笔方案
-- **z + 拼音** 反查汉字五笔编码（如 `zni` 查看「你」的编码）
-- 短语同样写在 `custom_phrase.txt`，两个方案通用
-- 用户词库自动学习，`Ctrl+=` 手动造词
+保存后重新部署。
+
+### 五笔 86
+
+- 输入 `z` + 拼音可反查汉字的五笔编码，例如输入 `zni` 查看「你」的编码
+- 自定义短语同样写在 `custom_phrase.txt`，与拼音方案共用
+- 连续上屏可自动造词，最长 4 字
 
 ## 目录结构
 
-```
+```text
 rime-sanhe/
-├── sanhe.schema.yaml        # 拼音主方案（全拼+小鹤双拼）
+├── sanhe.schema.yaml        # 拼音主方案（全拼 + 小鹤双拼）
 ├── sanhe_algebra.yaml       # 拼音转写规则（含模糊音库）
 ├── sanhe.dict.yaml          # 拼音词库索引
-├── sanhe_reverse.*          # 拆字/笔画反查
+├── sanhe_reverse.*          # 拆字与笔画反查
 ├── sanhe_english.*          # 英文词汇
 ├── sanhe_mixedcode.*        # 中英混合编码
-├── wubi86.schema.yaml       # 五笔86方案
-├── wubi86.dict.yaml         # 五笔86码表
-├── pinyin_reverse.*         # 五笔拼音反查词库（含部署依赖）
-├── custom_phrase.txt        # 自定义短语（两方案通用）
-├── default.yaml             # 全局配置（方案列表、快捷键）
+├── sanhe_symbols.yaml       # 拼音方案符号配置
+├── wubi86.schema.yaml       # 五笔 86 方案
+├── wubi86.dict.yaml         # 五笔 86 码表
+├── pinyin_reverse.*         # 五笔拼音反查词库与部署依赖
+├── custom_phrase.txt        # 自定义置顶短语（拼音与五笔 86 共用）
+├── default.yaml             # 全局配置（方案列表、状态面板与快捷键）
 ├── symbols.yaml             # 标点符号预设（源自 rime-prelude）
-├── weasel.yaml              # 小狼毫界面皮肤
+├── weasel.yaml              # 小狼毫界面配置
+├── version.txt              # 当前版本号
 ├── custom/                  # 方案切换模板（勿删）
-├── dicts/                   # 各分类词库
+├── dicts/                   # 分类词库
+├── docs/                    # 开发日志
 ├── licenses/                # 第三方许可证
 └── lua/                     # Lua 增强脚本
 ```
 
+开发过程与版本记录见 [开发日志](docs/devlog.md)。
+
 ## 许可与致谢
 
-- 拼音方案、词库、Lua 脚本：衍生自 **万象拼音** [amzxyz/rime_wanxiang](https://github.com/amzxyz/rime_wanxiang)，遵循 **CC BY 4.0**，词库另含万象项目所引用的开源数据
-- 五笔86码表：源自 [rime/rime-wubi](https://github.com/rime/rime-wubi)（**MIT License**，见 `licenses/rime-wubi-LICENSE`）
-- symbols.yaml：源自 [rime/rime-prelude](https://github.com/rime/rime-prelude)（**BSD-3-Clause**，见 `licenses/rime-prelude-LICENSE`）
-- Rime 引擎：[rime.im](https://rime.im)（BSD / GPL / LGPL）
+- **拼音方案、词库与 Lua 脚本**：衍生自万象拼音 [amzxyz/rime_wanxiang](https://github.com/amzxyz/rime_wanxiang)，遵循 [CC BY 4.0](LICENSE)；词库另含万象项目所引用的开源数据
+- **五笔 86 码表**：源自 [rime/rime-wubi](https://github.com/rime/rime-wubi)，采用 MIT License，见 [许可证](licenses/rime-wubi-LICENSE)
+- **`symbols.yaml`**：源自 [rime/rime-prelude](https://github.com/rime/rime-prelude)，采用 BSD-3-Clause，见 [许可证](licenses/rime-prelude-LICENSE)
+- **Rime 引擎**：[rime.im](https://rime.im)（BSD / GPL / LGPL）
 
 按 CC BY 4.0 要求，衍生分发时请保留对本项目及万象上游的署名。
