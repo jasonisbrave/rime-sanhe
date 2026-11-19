@@ -85,6 +85,7 @@ engine:
     - script_translator  #脚本翻译器，用于拼音、粤拼等基于音节表的输入方案
     - lua_translator@*sanhe.version_display  #输入'/wx'，显示三合项目网址和当前版本号
     - lua_translator@*sanhe.set_schema  #输入'/zrm'，快速切换为自然码双拼， /flypy→小鹤双拼 /mspy→微软双拼 /zrm→自然码 /sogou→搜狗双拼 /abc→智能ABC /ziguang→紫光双拼 /pyjj→拼音加加 /gbpy→国标双拼 /lxsq→乱序17 /pinyin→全拼
+    - lua_translator@*sanhe.set_profile  #输入'/fast'/balance'/full'切换性能档位：极速关补全/均衡降注释/标准默认，改写sanhe.custom.yaml后需重新部署
     - lua_translator@*sanhe.shijian  #农历、日期、节气、节日、时间、周、问候模板等等，触发清单看下文
     - lua_translator@*sanhe.unicode_conversion*T  #通过输入大写U引导，并输入Unicode编码获得汉字输出
     - lua_translator@*sanhe.number_conversion  #数字、金额大写，通过输入大写R1234获得候选输出
@@ -94,7 +95,7 @@ engine:
     - lua_translator@*sanhe.super_symbols  #超级符号库：/sym.arrow.r.double→⇒  /sym?arrow 或 /sym/arrow 模糊搜索  /emoji.xxx 同理
     - table_translator@custom_phrase  #自定义短语 custom_phrase.txt，用于置顶自定义编码候选词
     - lua_translator@*sanhe.super_english*T  #英文词汇表导入，限流，格式化
-    - lua_translator@*sanhe.super_wubi  #五笔召唤beta：输入/w+五笔编码（如/wvbg）直接出五笔候选，注释显示编码
+    - lua_translator@*sanhe.super_wubi  #五笔召唤：输入/w+五笔编码（如/wvbg）直接出五笔候选，注释显示编码
     - table_translator@sanhe_mixedcode  #混合编码词汇表导入
     - reverse_lookup_translator@sanhe_reverse  #挂接部件组字和笔画反查
     - script_translator@add_user_dict  #按需自造词
@@ -193,7 +194,7 @@ sanhe_english:
   max_candidates: 5  #英文候选输出最大候选数(适用于需要选单字组词的用户)
   trigger: "\\"  #英文造词符号\，写一个用时双击
 
-# 五笔召唤（beta）：拼音方案中输入 /w + 五笔编码 直接出五笔候选
+# 五笔召唤：拼音方案中输入 /w + 五笔编码 直接出五笔候选
 sanhe_wubi:
   dictionary: wubi86
   enable_user_dict: false

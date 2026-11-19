@@ -1,0 +1,37 @@
+# 三合输入法按键延迟基准测试工作负载
+# 格式: `type <字符串>`（逐字符输入）或 `key <键名>`（space/return/escape/backspace）
+# `# @tag <名称>` 开始一个分组，分组名用于聚合统计；`---` 重置为默认分组
+# bench.py 会对 tag 为 health 的分组做严格断言（每个 type 事件后必须有候选）
+
+# @tag health
+# 短词（健康检查组）：全拼 nihao -> 你好
+type nihao
+key space
+
+# @tag short_word
+# 日常短词
+type shijie
+key space
+type gongzuo
+key space
+type xiexie
+key space
+
+# @tag sentence
+# 整句连续输入
+type woshizhongguorenmin
+key space
+
+# @tag tone
+# 声调筛选（数字键作为声调过滤）
+type nihao
+type 8
+key space
+
+# @tag reverse
+# 部件/笔画反查（` 前缀；szm 补全前无候选属正常）
+type `szm
+key escape
+
+# 注：五笔召唤 /wvbg 依赖 wubi86 词表，本工具为控制部署耗时只在 schema_list 部署
+# sanhe（见 bench.py 生成的 default.custom.yaml），故负载不含该场景。

@@ -5,7 +5,7 @@ local sanhe = {}
 
 -- x-release-please-start-version
 
-sanhe.version = "v1.1.0-beta1"
+sanhe.version = "v1.1.0"
 
 -- x-release-please-end
 

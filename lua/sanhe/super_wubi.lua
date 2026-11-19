@@ -1,5 +1,5 @@
 --[[
-三合五笔召唤模块（beta）
+三合五笔召唤模块
 功能：在三合拼音方案中输入 /w + 五笔编码（如 /wvbg），直接召唤五笔86候选。
       候选注释显示完整编码，边打边学码；支持前缀补全（/wvb 列出 vb 开头编码）。
 实现：参照 super_english 的 Component.TableTranslator 挂载模式，
@@ -58,7 +58,7 @@ function T.func(input, seg, env)
     -- 仅输入前缀：给出用法提示
     if code == "" then
         local tip = Candidate("sanhe_wubi", seg.start, seg._end,
-            format("五笔召唤：接着输入编码，如 %svbg", env.trigger), "〔beta〕")
+            format("五笔召唤：接着输入编码，如 %svbg", env.trigger), "〔帮助〕")
         tip.preedit = input
         tip.quality = 2
         yield(tip)

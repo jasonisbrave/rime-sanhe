@@ -9,7 +9,7 @@ local function translator(input, seg, env)
             "上游: https://github.com/amzxyz/rime-wanxiang", "〔万象〕"))
 
         yield(Candidate("doc", seg.start, seg._end,
-            "全拼 /pinyin · 小鹤双拼 /flypy · 五笔86见状态面板", "〔帮助〕"))
+            "全拼 /pinyin · 双拼 /flypy · 性能档 /fast · 五笔86见状态面板", "〔帮助〕"))
     end
 end
 

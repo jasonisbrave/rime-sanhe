@@ -2,11 +2,11 @@
 
 一套基于 [Rime](https://rime.im) 的中文输入方案，面向全拼、小鹤双拼和五笔 86 用户。内核精简自 [万象拼音](https://github.com/amzxyz/rime_wanxiang)，保留带调词库、智能纠错、反查和 Lua 增强等能力。
 
-> **快速安装：** 下载 [v1.1.0-beta1 安装包](https://github.com/jasonisbrave/rime-sanhe/releases/download/v1.1.0-beta1/rime-sanhe-v1.1.0-beta1.zip)（当前预发布版），解压后将 `rime-sanhe/` 内的全部文件复制到 Rime 用户目录，再重新部署。也可将本仓库完整克隆到用户目录。
+> **快速安装：** 下载 [v1.1.0 安装包](https://github.com/jasonisbrave/rime-sanhe/releases/download/v1.1.0/rime-sanhe-v1.1.0.zip)，解压后将 `rime-sanhe/` 内的全部文件复制到 Rime 用户目录，再重新部署。也可将本仓库完整克隆到用户目录。
 >
 > 其他下载入口：[GitHub Releases](https://github.com/jasonisbrave/rime-sanhe/releases) · [GitCode Releases](https://gitcode.com/jasonisbrave/rime-sanhe/releases)。详细步骤见 [安装与部署](#安装与部署)。
 
-[![版本](https://img.shields.io/badge/版本-v1.1.0--beta1-green)](https://github.com/jasonisbrave/rime-sanhe/releases/tag/v1.1.0-beta1)
+[![版本](https://img.shields.io/badge/版本-v1.1.0-green)](https://github.com/jasonisbrave/rime-sanhe/releases/tag/v1.1.0)
 [![许可](https://img.shields.io/badge/许可-CC%20BY%204.0-blue)](LICENSE)
 [![引擎](https://img.shields.io/badge/引擎-Rime%20中州韻-red)](https://rime.im)
 [![方案](https://img.shields.io/badge/方案-全拼%20·%20小鹤双拼%20·%20五笔86-orange)](#输入方案)
@@ -20,16 +20,17 @@
 | **三合拼音 · 小鹤双拼** | 与全拼共用词库和智能功能 | 输入 `/flypy`；输入 `/pinyin` 切回全拼 |
 | **五笔 86** | 极点 86 码表，作为独立方案使用 | 按 `F4` 或 ``Ctrl+` `` 打开状态面板选择 |
 
-拼音与五笔 86 共用 `custom_phrase.txt` 维护置顶短语，自动学习的用户词库则彼此独立。
+拼音与五笔 86 共用 `custom_phrase.txt` 维护置顶短语，但自动学习的用户词库彼此独立。
 
 ## 拼音方案特性
 
-- **带调词库与声调筛选**：`7` / `8` / `9` / `0` 分别对应一、二、三、四声，连按可自动覆盖；不确定声调时，可依次按下 `7`、`8`、`9`、`0`
+- **带调词库与声调筛选**：`7`、`8`、`9`、`0` 分别对应一、二、三、四声，连按可自动覆盖；不确定声调时，可依次按下 `7`、`8`、`9`、`0`
 - **智能纠错**：兼容常见错音、错字，同时支持简拼和整句输入
 - **拆字与笔画反查**：输入反引号（`` ` ``）进入反查
 - **中英混输**：可直接输入英文单词，自动识别中英文混合内容
 - **Lua 增强**：提供拆分输入、超级注释、日期时间（`\rq`）、计算器、符号大全（`/fh`）等功能
-- **五笔召唤（beta）**：在拼音方案中输入 `/w` + 五笔编码（如 `/wvbg`），直接显示五笔候选，并在注释中显示完整编码
+- **五笔召唤**：在拼音方案中输入 `/w`，后接五笔编码（如 `/wvbg`），即可显示五笔候选，并在注释中查看完整编码
+- **性能档位**：输入 **`/fast`**、**`/balance`** 或 **`/full`**，一键切换极速、均衡、标准三档配置，改善响应速度；详见下文
 - **可选语法模型**：改善长句输入效果，启用方法见下文
 
 ## 安装与部署
@@ -99,11 +100,29 @@
 
 保存后重新部署。
 
+### 性能档位
+
+在拼音方案中输入 `/fast`、`/balance` 或 `/full`，然后**重新部署**，即可切换性能档位。切换机制与 `/flypy` 相同：命令会改写 `sanhe.custom.yaml`，且与全拼、小鹤双拼切换互不影响。
+
+| 档位 | 命令 | 配置变化 | 适合 |
+| --- | --- | --- | --- |
+| 标准档 | **`/full`** | 恢复默认配置 | 追求完整功能 |
+| 均衡档 | **`/balance`** | 候选注释数 30 → 15 | 与标准档差异在测量噪声内 |
+| 极速档 | **`/fast`** | 关闭长词补全（`enable_completion`）、注释数降至 6、关闭英文/混输补全 | 追求最快响应；不依赖长词联想和英文补全 |
+
+> 档位配置写在 `sanhe.custom.yaml` 的 `# >>> 性能档位` 标记注释之间，由命令自动维护；手动修改会在下次切换时被覆盖。
+
 ### 五笔 86
 
-- 输入 `z` + 拼音可反查汉字的五笔编码，例如输入 `zni` 查看「你」的编码
+- 输入 `z`，后接拼音，即可反查汉字的五笔编码；例如输入 `zni`，查看「你」的编码
 - 自定义短语同样写在 `custom_phrase.txt`，与拼音方案共用
 - 连续上屏可自动造词，最长 4 字
+
+## 延迟基准测试（开发者）
+
+`tools/bench/` 提供基于真实 librime 引擎（小狼毫 `rime.dll`）的按键延迟测量工具，可对比标准、均衡、极速三档配置的每键处理耗时。
+
+你可以用它验证性能档位的优化效果，并评估后续词库瘦身的收益。具体用法见 [tools/bench/README.md](tools/bench/README.md)。
 
 ## 目录结构
 
@@ -128,7 +147,8 @@ rime-sanhe/
 ├── dicts/                   # 分类词库
 ├── docs/                    # 开发日志
 ├── licenses/                # 第三方许可证
-└── lua/                     # Lua 增强脚本
+├── lua/                     # Lua 增强脚本
+└── tools/bench/             # 延迟基准测试工具（开发者）
 ```
 
 开发过程与版本记录见 [开发日志](docs/devlog.md)。

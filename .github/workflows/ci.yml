@@ -1,0 +1,57 @@
+name: deploy-check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  deploy-check:
+    runs-on: ubuntu-latest
+    container: debian:trixie-slim
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rime toolchain
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            librime-bin librime-plugin-lua librime-data lua5.4
+
+      - name: Lua syntax check
+        run: find lua -name '*.lua' -print0 | xargs -0 -n1 luac -p
+
+      - name: Deploy build
+        timeout-minutes: 15
+        run: |
+          set -o pipefail
+          rime_deployer --build . /usr/share/rime-data 2>&1 | tee deploy.log
+
+      - name: Assert build artifacts
+        run: |
+          for f in \
+            build/sanhe.prism.bin \
+            build/sanhe.table.bin \
+            build/wubi86.prism.bin \
+            build/wubi86.table.bin; do
+            if [ ! -f "$f" ]; then
+              echo "MISSING: $f"
+              exit 1
+            fi
+            echo "OK: $f"
+          done
+
+      - name: Assert no errors in deploy log
+        run: |
+          # rime_deployer 日志中 warning 可容忍，error 视为失败
+          # 兼容两种错误形态：含 error 字样的消息行，与 glog 风格的行首 E20261119… 行
+          if grep -iE '\berror\b|^E[0-9]{8}' deploy.log; then
+            echo "deploy log contains error(s)"
+            exit 1
+          fi
+          echo "deploy log clean (no errors)"
+
+      - name: List build products
+        run: ls -la build/

@@ -79,5 +79,66 @@
   - [x] `nihao8` 声调筛选（二声）正常
 - 决策：**暂不转正**，beta 继续迭代新功能
 - 待办：
-  - [ ] 收集下一批 beta 功能需求
-  - [ ] 迭代完成后视稳定性决定 v1.1.0 转正
+  - [x] 收集下一批 beta 功能需求（2026-11-19 完成，见下节）
+  - [x] 迭代完成后视稳定性决定 v1.1.0 转正（本次转正）
+
+---
+
+## 2026-11-19 · 性能专项与 v1.1.0 转正
+
+### 一、动机与决策
+
+万象日常使用卡顿，决定全面转向自维护三合。迭代路线：**v1.1.0（延迟基准 + 性能档位 + 五笔召唤转正 + 工程化）→ v1.2（词库瘦身与 Lua 链路优化）→ v2.0（语音第三输入模式，已立项）**。平台适配作为最后的扩展阶段。
+
+### 二、延迟基准工具（tools/bench/）
+
+ctypes 直驱小狼毫 `rime.dll`（真实引擎 + lua 插件），逐键测量 `RimeProcessKey` + `RimeGetContext`；三变体（full/balance/fast）各预热 1 轮 + 正式 3 轮 × 60 键；健康断言（nihao 后候选数 >0）防 lua 静默失效。
+
+**librime FFI 踩坑（复用价值高，详见 tools/bench/README.md）**：
+
+| 坑 | 解法 |
+|----|------|
+| `RimeTraits.modules` 是 `char**` 数组而非逗号分隔字符串，传错直接访问违例崩溃 | `(c_char_p*3)(b"default", b"lua", None)` |
+| ctypes 结构体只存指针，modules 数组被 GC → 悬垂指针，部署随机空跑 | 数组挂保活引用 |
+| 对不存在字段赋值会静默建 Python 属性（引擎拿到 NULL） | 赋值后读回校验 |
+| librime 1.11 的 `RimeComposition` 只有 5 字段（旧教程多 2 个）→ menu 偏移错 16 字节，num_candidates 恒 0 | 以上游 1.11.2 rime_api.h 为准 |
+
+### 三、基线数字与关键发现（weasel-0.17.4 / librime 1.11）
+
+| 指标 | full | balance | fast |
+|---|---|---|---|
+| 每键 mean | 5.458 ms | 5.529 ms | **5.160 ms（-5.5%）** |
+| 每键 p95 | 9.347 ms | 9.843 ms | 9.281 ms |
+| 部署耗时 | 20.8 s | 20.9 s | 21.0 s |
+
+- 分组：short_word -6.4%、tone -6.2%、sentence 基本持平、balance 全指标在噪声内。
+- **关键发现：延迟几乎全部在 process_key（3.7～6.5 ms/键），get_context 仅 0.02～0.04 ms**——候选在 process_key 阶段已算完；补全/注释参数的档位收益有限（-5.5%），延迟集中在 process_key 所覆盖的处理链上（Lua 处理器/过滤器/翻译器与词典检索都在此阶段执行）。**各组件的具体成本占比由 v1.2 前置的组件分解测量给出**（见 tools/bench/results/component-breakdown.md），据此确定瘦身优先级。
+- 五笔召唤场景因基准部署精简（schema_list 只留 sanhe 控制部署时长）未纳入负载，属工具已知局限。
+
+### 四、性能档位（/fast /balance /full）
+
+- 新增 `lua/sanhe/set_profile.lua`：与 `/flypy` 同机制（改写用户目录 `sanhe.custom.yaml` 的标记块后重新部署），行级块操作、fast→full 可逐字节还原模板、不触碰 algebra 行，两套切换互不干扰。
+- fast＝关补全（主/英/混）+ 注释数 6；balance＝注释数 15；full＝恢复默认。
+- 块格式与 bench 工具写入格式完全一致（标记顶格、键值缩进 2 空格）。
+
+### 五、工程化与发布
+
+- **CI**（`.github/workflows/ci.yml`）：Debian trixie 容器装 `librime-bin + librime-plugin-lua + librime-data`，`luac -p` 全量语法检查 → `rime_deployer --build` 真实部署 → 断言 sanhe/wubi86 的 prism/table 产物 → 日志错误检查（含 pipefail 防 tee 吞退出码、glog `E20…` 行首格式检测）。首轮真实运行待 push 后观察。
+- **打包**（`tools/release/package.py`）：读 version.txt 生成 `dist/rime-sanhe-v{版本}.zip` + sha256。v1.1.0 实测：105 文件 / 原始 100.12 MiB / 压缩 37.26 MiB。
+- **CHANGELOG.md** 建立（Keep a Changelog 风格）。
+
+### 六、v2.0 语音立项调研
+
+结论：**可行，值得立项**（完整调研见 [voice-2.0-research.md](voice-2.0-research.md)）。要点：librime 无音频能力，采用「SenseVoice-small sidecar（参考 CapsWriter-Offline，MIT）+ `/vv` lua 候选胶水」旁路架构；语音文本过三合过滤链、养用户词库，是与 Win+H（需联网、无热词）的本质差异。里程碑 M1 热词导出脚本 → M2 `/vv` + sidecar → M3 打包。
+
+### 七、v1.1.0 转正清单
+
+- 五笔召唤 beta → 正式（v1.1.0-beta1 已真机验证）
+- 版本号：version.txt / sanhe.lua → 1.1.0
+- README：性能档位章节、基准工具章节、目录结构更新
+- 新增推送前双复核流程（AGENTS.md）：oracle 复核 + designer 润色 README + 用户确认后才提交推送
+
+### 八、真机待办
+
+- [ ] 真机点验 `/fast` `/balance` `/full` 切换与重新部署（块逻辑已经 Python 等价模拟 + 引擎部署验证）
+- [ ] push 后观察 CI 首轮运行（容器内 rime_deployer 参数形态如与预期不符按 --help 修正）
