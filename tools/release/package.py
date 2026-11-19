@@ -39,7 +39,7 @@ def should_exclude(rel: Path) -> bool:
     # 用户词库目录
     if any(p.endswith(".userdb") for p in parts):
         return True
-    # tools/bench 下的运行产物；breakdown.py 是 v1.2 的组件分解工具（开发中），随 v1.2 发布
+    # tools/bench 下的运行产物；breakdown.py 是 v1.2.0 的组件分解工具（开发中），随 v1.2.0 发布
     if top == "tools" and len(parts) >= 2 and parts[1] == "bench":
         if len(parts) >= 3 and parts[2] in ("ws", "results"):
             return True
