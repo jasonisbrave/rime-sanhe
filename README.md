@@ -2,11 +2,11 @@
 
 一套基于 [Rime](https://rime.im) 的中文输入方案，面向全拼、小鹤双拼和五笔 86 用户。内核精简自 [万象拼音](https://github.com/amzxyz/rime_wanxiang)，保留带调词库、智能纠错、反查和 Lua 增强等能力。
 
-> **快速安装：** 下载 [v1.1.0 安装包](https://github.com/jasonisbrave/rime-sanhe/releases/download/v1.1.0/rime-sanhe-v1.1.0.zip)，解压后将 `rime-sanhe/` 内的全部文件复制到 Rime 用户目录，再重新部署。也可将本仓库完整克隆到用户目录。
+> **快速安装：** 下载 [v1.2.0 安装包](https://github.com/jasonisbrave/rime-sanhe/releases/download/v1.2.0/rime-sanhe-v1.2.0.zip)，解压后将 `rime-sanhe/` 内的全部文件复制到 Rime 用户目录，再重新部署。也可将本仓库完整克隆到用户目录。
 >
 > 其他下载入口：[GitHub Releases](https://github.com/jasonisbrave/rime-sanhe/releases) · [GitCode Releases](https://gitcode.com/jasonisbrave/rime-sanhe/releases)。详细步骤见 [安装与部署](#安装与部署)。
 
-[![版本](https://img.shields.io/badge/版本-v1.1.0-green)](https://github.com/jasonisbrave/rime-sanhe/releases/tag/v1.1.0)
+[![版本](https://img.shields.io/badge/版本-v1.2.0-green)](https://github.com/jasonisbrave/rime-sanhe/releases/tag/v1.2.0)
 [![许可](https://img.shields.io/badge/许可-CC%20BY%204.0-blue)](LICENSE)
 [![引擎](https://img.shields.io/badge/引擎-Rime%20中州韻-red)](https://rime.im)
 [![方案](https://img.shields.io/badge/方案-全拼%20·%20小鹤双拼%20·%20五笔86-orange)](#输入方案)
@@ -29,6 +29,8 @@
 - **拆字与笔画反查**：输入反引号（`` ` ``）进入反查
 - **中英混输**：可直接输入英文单词，自动识别中英文混合内容
 - **Lua 增强**：提供拆分输入、超级注释、日期时间（`\rq`）、计算器、符号大全（`/fh`）等功能
+- **双拼计算器**：小鹤双拼下直接输入 `v1+2*3` 即可计算（v 后跟算符或数字的表达式形态），无需切换大写
+- **深度性能优化**：v1.2.0 重构 Lua 组件链，实测每键延迟降低约 35%（普通拼音输入不进符号/统计等低频模块）
 - **五笔召唤**：在拼音方案中输入 `/w`，后接五笔编码（如 `/wvbg`），即可显示五笔候选，并在注释中查看完整编码
 - **性能档位**：输入 **`/fast`**、**`/balance`** 或 **`/full`**，一键切换极速、均衡、标准三档配置，改善响应速度；详见下文
 - **可选语法模型**：改善长句输入效果，启用方法见下文
