@@ -174,3 +174,26 @@ ctypes 直驱小狼毫 `rime.dll`（真实引擎 + lua 插件），逐键测量 
 3. 其余 8 个合并为 `hub_translator` 按输入前缀内部分发（入口成本 8→1，回收 ~1.7ms；V/R/U 前缀的顺手做 tag 化双保险）
 
 v1.1.0 已于 2026-11-19 发布（GitHub Release + CI 通过），组件分解数据即 v1.2.0 开发输入。
+
+### 十、v1.2.0 批次 1：两元凶优化（2026-11-21）
+
+**关键发现（修正了实施前的假设）**：
+
+1. **lua 逻辑本身几乎免费**——逐层探针（os.clock + 空模块 stub A/B 交叉实验）证明 tag 早退/惰性化改造前后 lua 侧合计 ≤0.08ms/键。super_symbols 的真凶是 **init 时急切加载 2600+ 行符号表常驻 lua 堆**：每键的协程/候选分配反复触发增量 GC 标记（决定性证据：懒加载数据变体比常驻数据快 ~0.9ms/键）
+2. **修复 = `load_stores` 惰性化**（首次 `/` 输入才读盘，功能口径不变）+ M.func 四 tag 早退 + `/sym` `/emoji` 前缀兜底 + `update_super_symbol_tag` 改 has_tag 判别免每键 Set 分配
+3. **engine 级 `tags:` 隔离被证伪**：librime `Translator` 基类不做 tag 过滤，配置无效（已查源码+实验），实验性 schema 改动已全部还原
+4. input_statistics 惰性化后残余 **+0.39ms/键是 C++ 层每翻译器段查询的固定入口开销**，lua 侧无法消除——这是批次 2 hub 合并（减少翻译器注册数量）的直接理论依据
+5. 同轮实测其余入口成本大户：set_profile +1.273、super_calculator +0.637、shijian +0.614、number_conversion +0.603
+
+**改动**：`super_symbols.lua`（惰性加载 + tag 早退）、`input_statistics.lua`（计数内存累积，每 50 次提交或查询时批量落库、fini 兜底 flush；崩溃最多丢一个窗口计数，换取日常输入零统计写库 I/O）、`tools/bench/smoke_workload.txt`（功能冒烟负载）。
+
+**复测**（交错基线协议）：
+
+| 指标 | 批次 1 前 | 批次 1 后 |
+|---|---|---|
+| super_symbols Δ | +1.586 ms | **-0.035 ms（噪声内归零）** |
+| input_statistics Δ | +0.589 ms | +0.390 ms（余为 C++ 入口开销） |
+| full 基线 | ~5.1 ms | 4.26 ms（机器有桌面负载，绝对值受载，看同轮 Δ） |
+| 组删 no_translators_misc Δ | +3.626 | +2.956（单删之和 +2.320，自洽） |
+
+冒烟全过：`/sym.arrow.r.double`→⇒、`/sym?arrow` 模糊查询、裸 `/sym` 提示态、`/tj` 统计、`nihao` 正常上屏。

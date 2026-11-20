@@ -613,6 +613,8 @@ local function try_autofill(env, context)
 end
 
 -- 标记超级符号模式，供其他模块通过 s2t_conversion 识别
+-- v1.2.0：先 has_tag 判别再决定加减，避免普通拼音键每次 update 都分配 Set 做集合运算
+-- （二分定位：这是 super_symbols 每键固定开销的主要来源）。
 local function update_super_symbol_tag(env, context)
     if not context or not context.composition or context.composition:empty() then
         return
@@ -623,24 +625,40 @@ local function update_super_symbol_tag(env, context)
         return
     end
 
+    local input = context.input or ""
     local runtime = get_runtime(env)
     local sym_prefix = runtime.sym_prefix
     local emoji_prefix = runtime.emoji_prefix
-    local input = context.input or ""
 
     if input:sub(1, #sym_prefix) == sym_prefix
         or input:sub(1, #emoji_prefix) == emoji_prefix
     then
-        segment.tags = segment.tags + Set({ "super_symbol" })
+        if not segment:has_tag("super_symbol") then
+            segment.tags = segment.tags + Set({ "super_symbol" })
+        end
     else
-        segment.tags = segment.tags - Set({ "super_symbol" })
+        if segment:has_tag("super_symbol") then
+            segment.tags = segment.tags - Set({ "super_symbol" })
+        end
     end
 end
 
 local function on_context_update(env, context)
+    local input = context and context.input or ""
+
+    -- v1.2.0：普通拼音键早退。符号态维护只在 / 前缀输入下才有意义；
+    -- 非 / 输入只需摘掉可能残留的 super_symbol 标签（用户删掉了 "/" 的情形），
+    -- 自动补全链路整体跳过。
+    if input:sub(1, 1) ~= "/" then
+        env.super_symbols_last_input = input
+        env.super_symbols_autofill_target = nil
+        env.super_symbols_autofill_suppressed_input = nil
+        update_super_symbol_tag(env, context)
+        return
+    end
+
     update_super_symbol_tag(env, context)
 
-    local input = context and context.input or ""
     local previous_input = env.super_symbols_last_input
     env.super_symbols_last_input = input
 
@@ -685,8 +703,11 @@ end
 
 function M.init(env)
     env.super_symbols_runtime = build_runtime(env.engine.schema.config)
-    load_stores(env)
-
+    -- v1.2.0：符号库不再随方案加载立即读入。两份数据表（codex_sym/emoji 共
+    -- 2600+ 行）常驻 lua 堆会让每次键入产生的协程/候选分配反复触发增量 GC
+    -- 标记（bench 实测为 super_symbols 每键成本的主体）。改为首次进入符号
+    -- 输入（M.func / autofill 入口处均有 load_stores 惰性加载）时再读盘，
+    -- 普通拼音输入完全不承担该成本；功能与候选口径不变。
     local context = env.engine and env.engine.context
     if context and context.update_notifier then
         local ok, connection_or_err = pcall(function()
@@ -707,9 +728,44 @@ function M.fini(env)
     release_runtime(env)
 end
 
+-- v1.2.0：translator 入口 tag 早退。本组件只响应 recognizer 标注的
+-- super_sym / super_emoji / super_sym_pre / super_emoji_pre 四个 tag，
+-- 普通拼音段（abc 等）逐键也会进入本 translator，在这里直接返回，
+-- 避免普通输入承担符号库查询的重逻辑。
+-- 兜底再按输入前缀（/sym /emoji）放行：个别边界输入（如裸 /sym 被 punct
+-- 模式抢先标注、/sym.1 等不被 4 tag 覆盖的输入）历史上仍由本组件输出
+-- 提示/无匹配候选，为 100% 保持行为而保留该路径（前缀判断为 O(1)，无感知）。
+local SUPER_SYMBOL_TAGS = {
+    "super_sym",
+    "super_emoji",
+    "super_sym_pre",
+    "super_emoji_pre"
+}
+
+local function segment_is_super_symbols(segment, input, runtime)
+    for i = 1, #SUPER_SYMBOL_TAGS do
+        if segment:has_tag(SUPER_SYMBOL_TAGS[i]) then
+            return true
+        end
+    end
+
+    for i = 1, #runtime.trigger_defs do
+        if starts_with(input, runtime.trigger_defs[i].exact) then
+            return true
+        end
+    end
+
+    return false
+end
+
 function M.func(input, segment, env)
     local context = env.engine.context
     local runtime = get_runtime(env)
+
+    if not segment_is_super_symbols(segment, input, runtime) then
+        return
+    end
+
     local query = parse_query(input, runtime)
     if not query then
         return

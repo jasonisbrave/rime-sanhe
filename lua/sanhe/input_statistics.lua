@@ -1,5 +1,14 @@
 -- amzxyz@https://github.com/amzxyz/rime-wanxiang
 -- input_stats.lua：分设备统计 / 最近速度 / 峰速格式去重 / 历史查询
+--
+-- v1.2.0 写库限流（惰性化）设计取舍：
+-- 1. 所有计数先累积在内存（env.pending_writes），不再每次上屏都读写 LevelDb；
+--    每 FLUSH_EVERY_COMMITS 次上屏、或触发统计查询时（取先到者）一次性批量写库。
+-- 2. 崩溃/强杀最多丢失一个 flush 窗口内的计数（约 50 次上屏的量级），
+--    对输入统计数据而言可接受；换取日常输入零统计写库 I/O。
+-- 3. 读取保持惰性：仅 /btj /rtj /ztj /ytj /ntj /tj /htj 查询触发时才扫库聚合；
+--    查询前先 flush 内存计数，保证报表数字与逐笔写库口径完全一致。
+-- 4. fini（方案卸载/会话结束）时也会 flush，正常退出不丢数据。
 local userdb = require("sanhe/userdb")
 local sanhe = require("sanhe/sanhe")
 local SOFTWARE_NAME = rime_api.get_distribution_code_name()
@@ -15,6 +24,9 @@ local MAX_VALID_PEAK_KEYS_PER_MINUTE = 900
 local DEFAULT_MAX_SPEED_COMMIT_LENGTH = 10
 local STATISTICS_PREFIX = "statistics/"
 local DAY_PREFIX = STATISTICS_PREFIX .. "day/"
+-- 每上屏 FLUSH_EVERY_COMMITS 次提交就把内存计数批量写入统计库（或查询时提前 flush）。
+-- 崩溃最多丢一个窗口内的计数，属输入统计可接受范围（见文件头注释）。
+local FLUSH_EVERY_COMMITS = 50
 local DAY_FIELDS = {
     ["text/characters"]="characters",
     ["text/code_keystrokes"]="code_keystrokes",
@@ -242,34 +254,47 @@ local function new_stats()
     }
 end
 
+-- v1.2.0：写库限流。计数只累积在内存，不在每次提交时读写 LevelDb；
+-- 由 flush_pending_writes 批量落库。日期推进天然安全：raw_key 内含日期，
+-- 跨天后旧键不再写入，不会出现旧写缓存跨日错加的问题。
 local function stats_add(env, key, amount)
-    local db = get_db(env)
-    if env.stats_db_error or not db then return false end
-
     local raw_key = make_raw_key(key, env.device_id)
     if not raw_key then return false end
 
-    -- 日期推进时清空旧日缓存；每个键第一次仍从数据库读取真实当前值。
-    local key_day = key:match("^statistics/day/(%d%d%d%d%d%d%d%d)/")
-    if key_day and (not env.write_cache_day or key_day > env.write_cache_day) then
-        env.write_cache = {}
-        env.write_cache_day = key_day
-    end
+    env.pending_writes[raw_key] = (env.pending_writes[raw_key] or 0) + amount
+    return true
+end
 
-    local value = env.write_cache[raw_key]
-    if value == nil then
-        value = parse_tail(db:fetch(raw_key))
-    end
+-- 批量把内存计数写入统计库：每个键读当前库值后累加，与逐笔写库口径一致。
+-- 已写成功的键立即出队；失败的键保留在队列中供下次 flush 重试。
+local function flush_pending_writes(env)
+    local pending = env.pending_writes
+    if not pending then return true end
 
-    value = to_integer(value + amount)
-    if not db:update(raw_key, string.format("c=%d d=0 t=0", value)) then
+    local any = false
+    for _ in pairs(pending) do
+        any = true
+        break
+    end
+    if not any then return true end
+
+    local db = get_db(env)
+    if not db then
         env.stats_db_error = true
         return false
     end
 
+    for raw_key, amount in pairs(pending) do
+        local value = to_integer(parse_tail(db:fetch(raw_key)) + amount)
+        if not db:update(raw_key, string.format("c=%d d=0 t=0", value)) then
+            env.stats_db_error = true
+            return false
+        end
+        pending[raw_key] = nil
+    end
+
     -- DbAccessor 是写入前的读视图；任何统计写入成功后都让报表 accessor 失效。
     release_read_accessor(env)
-    env.write_cache[raw_key] = value
     return true
 end
 
@@ -453,6 +478,13 @@ local function record_stats(env, characters, code_length, candidate_type)
         finish_peak(env)
         finish_average(env)
         env.last_observed_input = ""
+    end
+
+    -- 写库限流：内存累积计数，每 FLUSH_EVERY_COMMITS 次提交批量落库（先到先写）。
+    env.stats_pending_commits = (env.stats_pending_commits or 0) + 1
+    if env.stats_pending_commits >= FLUSH_EVERY_COMMITS then
+        env.stats_pending_commits = 0
+        flush_pending_writes(env)
     end
 end
 
@@ -675,6 +707,10 @@ end
 
 local function prepare_report(env)
     finish_stale(env, monotonic_ms())
+    -- 查询前先落库内存计数（含 finish_stale 刚结算的样本），
+    -- 保证报表与逐笔写库的历史口径完全一致。
+    env.stats_pending_commits = 0
+    flush_pending_writes(env)
 end
 
 local function standard_report(input, env)
@@ -787,8 +823,8 @@ local function init(env)
         "input_stats/speed_history_days", 30, 1, 365)
     env.stats_db_error = nil
     env.stats_read_accessor = nil
-    env.write_cache = {}
-    env.write_cache_day = nil
+    env.pending_writes = {}
+    env.stats_pending_commits = 0
     env.last_observed_input = ""
     env.titles = nil
     env.average_sample = {}
@@ -817,13 +853,16 @@ local function fini(env)
     finish_peak(env)
     finish_average(env)
     env.last_observed_input = ""
+    -- 正常卸载时把剩余内存计数落库，不丢统计。
+    env.stats_pending_commits = 0
+    flush_pending_writes(env)
     if env.stat_notifier then
         env.stat_notifier:disconnect()
         env.stat_notifier = nil
     end
     env.titles = nil
-    env.write_cache = nil
-    env.write_cache_day = nil
+    env.pending_writes = nil
+    env.stats_pending_commits = nil
     env.average_sample, env.peak_sample = nil, nil
     release_db(env)
 end

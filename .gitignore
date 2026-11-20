@@ -14,4 +14,5 @@ user.yaml
 # tools/bench 基准测试工具（工作区与测量结果不入库）
 tools/bench/ws/
 tools/bench/results/
+tools/bench/results_smoke*/
 __pycache__/

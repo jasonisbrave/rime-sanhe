@@ -1,0 +1,28 @@
+# 冒烟工作负载（v1.2.0 批次 1）：验证 super_symbols 与 input_statistics 改造后功能无损
+# 格式同 workload.txt：type <字符串> / key <键名>；@tag 分组
+#
+# 注意：super_symbols 自动补全会同步补全公共前缀（ar→arrow、doub→double，遇 . 停），
+# 因此精确路径用「type /sym.ar」+「type .r.doub」两段输入，最终 preedit 为 /sym.arrow.r.double。
+
+# @tag smoke_sym
+# 精确路径查询：/sym.arrow.r.double → 首个候选应为 ⇒（space 上屏）
+# （输入停在 .r.dou，自动补全同步推入 ble 成为完整路径）
+type /sym.ar
+type .r.dou
+key space
+# 裸 /sym 提示态：候选应为「超级符号」状态候选，注释 .路径 • ?搜索
+type /sym
+key escape
+# 全局模糊搜索：/sym?arrow → 候选含各类箭头符号（含 ⇒）
+type /sym?arrow
+key space
+
+# @tag smoke_stats
+# 统计查询：/tj 生涯总览，候选应为多行统计文本（📊 开头）
+type /tj
+key escape
+
+# @tag smoke_daily
+# 日常拼音：nihao → 你好（健康对照组）
+type nihao
+key space
