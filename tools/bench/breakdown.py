@@ -30,32 +30,21 @@ import bench  # noqa: E402  复用 FFI 结构体 / load_rime / deploy / parse_wo
 
 SCHEMA_NAME = "sanhe.schema.yaml"
 
-# trigger 型翻译器组（与 no_translators_misc 一致；组内二分定位用）
+# trigger 型翻译器组（与 no_translators_misc 一致；v1.2.0 批次 2 后 8 个模块
+# 收进 hub_translator 单入口，组删 = hub + 批次 1 已单独优化的两个模块）
 TRANSLATORS_MISC = [
-    "lua_translator@*sanhe.shijian",
-    "lua_translator@*sanhe.super_calculator",
-    "lua_translator@*sanhe.random_tools",
+    "lua_translator@*sanhe.hub_translator",
     "lua_translator@*sanhe.input_statistics",
     "lua_translator@*sanhe.super_symbols",
-    "lua_translator@*sanhe.version_display",
-    "lua_translator@*sanhe.set_schema",
-    "lua_translator@*sanhe.set_profile",
-    "lua_translator@*sanhe.unicode_conversion*T",
-    "lua_translator@*sanhe.number_conversion",
 ]
 
 # 组内二分：每个变体只删其中一个翻译器（name -> {段: [删除项]}）
+# v1.2.0 批次 2 后 8 个 trigger 模块合并为 hub 单入口，单删粒度变为整个 hub；
+# input_statistics / super_symbols 仍单独注册（批次 1），保留各自的单删变体。
 SINGLE_TRANSLATOR_VARIANTS = {
-    "no_tr_shijian": {"translators": ["lua_translator@*sanhe.shijian"]},
-    "no_tr_super_calculator": {"translators": ["lua_translator@*sanhe.super_calculator"]},
-    "no_tr_random_tools": {"translators": ["lua_translator@*sanhe.random_tools"]},
+    "no_tr_hub": {"translators": ["lua_translator@*sanhe.hub_translator"]},
     "no_tr_input_statistics": {"translators": ["lua_translator@*sanhe.input_statistics"]},
     "no_tr_super_symbols": {"translators": ["lua_translator@*sanhe.super_symbols"]},
-    "no_tr_version_display": {"translators": ["lua_translator@*sanhe.version_display"]},
-    "no_tr_set_schema": {"translators": ["lua_translator@*sanhe.set_schema"]},
-    "no_tr_set_profile": {"translators": ["lua_translator@*sanhe.set_profile"]},
-    "no_tr_unicode_conversion": {"translators": ["lua_translator@*sanhe.unicode_conversion*T"]},
-    "no_tr_number_conversion": {"translators": ["lua_translator@*sanhe.number_conversion"]},
 }
 
 # 变体定义：name -> {段: [要从原列表删除的组件]}；no_lua_all 为特例（只留非 lua 项）
@@ -117,18 +106,11 @@ NOTES = {
     "no_super_lookup": "输入中反查辅助筛选失效",
     "no_charset_filter": "字符集过滤失效",
     "no_misc_processors": "低频 trigger 处理器一组：unicode/上下文调频/局部提交/手动排序/super_tips/lua 按键绑定",
-    "no_translators_misc": "trigger 型翻译器一组：时间/计算器/随机工具/输入统计/超级符号/版本/切方案/切档位/unicode/数字大写",
+    "no_translators_misc": "trigger 型翻译器一组：hub（8合1）+输入统计+超级符号",
     "no_lua_all": "极限参照：整条 Lua 链（processors/filters/translators 中的 lua 项）全去掉，非 lua 项保留",
-    "no_tr_shijian": "单删 shijian（农历/日期/节气/节日/时间/问候模板）",
-    "no_tr_super_calculator": "单删 super_calculator（V 前缀超级计算器）",
-    "no_tr_random_tools": "单删 random_tools（UUID/ULID/随机密码）",
+    "no_tr_hub": "单删 hub_translator（日期时间/计算器/随机工具/版本/切方案/切档位/unicode/数字大写，8 合 1 入口）",
     "no_tr_input_statistics": "单删 input_statistics（输入统计，含提交写库）",
     "no_tr_super_symbols": "单删 super_symbols（/sym /emoji 符号库）",
-    "no_tr_version_display": "单删 version_display（/wx 版本显示）",
-    "no_tr_set_schema": "单删 set_schema（/flypy 等切双拼方案）",
-    "no_tr_set_profile": "单删 set_profile（/fast /balance /full 切性能档）",
-    "no_tr_unicode_conversion": "单删 unicode_conversion*T（U 前缀 Unicode 查询）",
-    "no_tr_number_conversion": "单删 number_conversion（R 前缀数字金额大写）",
 }
 
 ALL_VARIANTS = dict(VARIANTS)
@@ -505,43 +487,15 @@ def write_translator_report(rows, group_row, results, skipped, args):
                             group_delta if group_delta is not None else 0.0,
                             avg, spread))
         lines.append("")
-        lines.append("## 对 v1.2.0 的建议（Q2）")
+        lines.append("## 解读（v1.2.0 批次 2：hub 合并后）")
         lines.append("")
-        if culprits:
-            lines.append("**优先真 trigger 化（本轮实测元凶，收益最大）**：")
-            for d, name, mean, adj_base in culprits:
-                short = name.replace("no_tr_", "")
-                if short == "input_statistics":
-                    lines.append("- **%s**：单删已省 %.2f ms/键。它没有输入前缀可隔离，"
-                                 "元凶是每键/每次提交都执行的统计逻辑（含写库）——"
-                                 "应改为仅在触发 `/tj` 等查询时统计读取 + 提交写库限流/批量落盘。"
-                                 % (short, d))
-                else:
-                    lines.append("- **%s**：单删已省 %.2f ms/键，用 recognizer tag 隔离后"
-                                 "常规输入完全不进 Lua，可全额回收。"
-                                 % (short, d))
-            lines.append("")
-        if rest_rows:
-            n_rest = len(rest_rows)
-            lines.append("**其余 %d 个合并为 hub（入口成本 × 数量问题，合并即可解决）**："
-                         "将其余低频翻译器合并为 1 个 `lua_translator@*sanhe.hub_translator`，"
-                         "内部按输入前缀分发——平均每个入口 ≈%.2f ms，%d 合 1 后入口开销降为 1/%d，"
-                         "预计可回收 ~%.1f ms/键，功能与触发方式不变。"
-                         % (n_rest, rest / n_rest, n_rest, n_rest,
-                            rest * (n_rest - 1) / n_rest))
-        lines.append("")
-        lines.append("**合并 hub + 前缀分发即可（真 trigger 化性价比一般，模式现成时可选做）**：")
-        lines.append("- `super_calculator`（V 前缀，`recognizer/patterns/calculator: ^V.*$` 已存在）")
-        lines.append("- `number_conversion`（R 前缀，pattern `^number` 已存在）")
-        lines.append("- `unicode_conversion`（U 前缀，pattern 已存在）")
-        lines.append("- `super_symbols`（/sym /emoji，pattern 已存在）")
-        lines.append("- `shijian`（o 引导 / 斜杠触发，key_binder 已配 shijian_keys）")
-        lines.append("  引擎只对匹配 tag 的段落调用对应翻译器，常规拼音输入完全绕过 Lua 入口。")
-        lines.append("")
-        lines.append("**合并进 hub 即可保持现状**：version_display（/wx）、set_schema（/zrm 等）、"
-                     "set_profile（/fast 等）、random_tools（/uuid 等）"
-                     "——低频纯展示型，合并到 hub 内部分发后无额外成本，无需 trigger 化。"
-                     "（super_symbols、input_statistics 见上方优先项。）")
+        lines.append("- 8 个 trigger 翻译器已合并为 `lua_translator@*sanhe.hub_translator` 单入口，"
+                     "内部按输入形态 O(1) 分发（V/R/U/N 前缀 + 精确命令表 + shijian 宽门兜底）；"
+                     "input_statistics / super_symbols（批次 1 已优化）保持单独注册。")
+        lines.append("- 单删粒度对应 3 个注册项：hub 的 Δ 即 8 个模块合并后的总剩余成本"
+                     "（1 个 C++ 入口 + 分发逻辑 + 命中模块的自身成本），"
+                     "与批次 1 同协议组删 Δ=+2.956 ms/键（10 个入口）对比即可得回收幅度。")
+        lines.append("- 机制定性（入口成本 vs 每键常驻逻辑）以 devlog 本轮记录为准，报告只呈现数据。")
         lines.append("")
     else:
         lines.append("**无成功变体，无法计算差值。**")

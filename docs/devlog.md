@@ -197,3 +197,22 @@ v1.1.0 已于 2026-11-19 发布（GitHub Release + CI 通过），组件分解�
 | 组删 no_translators_misc Δ | +3.626 | +2.956（单删之和 +2.320，自洽） |
 
 冒烟全过：`/sym.arrow.r.double`→⇒、`/sym?arrow` 模糊查询、裸 `/sym` 提示态、`/tj` 统计、`nihao` 正常上屏。
+
+### 十一、v1.2.0 批次 2：hub 合并 8 翻译器（2026-11-21）
+
+- 新增 `lua/sanhe/hub_translator.lua`：8 个 trigger 型翻译器（日期时间/计算器/随机工具/版本/切方案/切档位/unicode/数字大写）收进单一入口，按输入形态 O(1) 分发（V/R/U/N 前缀独占、精确命令表、shijian 宽门兜底），**普通拼音输入零模块调用**。触发条件全部从各模块源码逐一核对，8 个目标模块源码零改动
+- schema：engine/translators 8 行注册 → 1 行 hub 注册；super_symbols、input_statistics 保持独立
+- init 复用各模块自身 init（random_tools/super_calculator/unicode.T 依赖 env 状态），fini 对应清理
+- **保守取舍**：精确斜杠命令同时调「精确模块 + shijian」（原注册下 shijian 本就会被调到，保持 segment.tags 与候选顺序逐字节一致），代价仅宽门内多一次 lua 调用
+
+**复测**（交错基线，同轮 5 次 full 穿插 3.26~3.58ms）：
+
+| 指标 | 批次 1 后 | 批次 2 后 |
+|---|---|---|
+| 组删 no_translators_misc Δ | +2.956 ms（10 入口） | **+1.387 ms（3 入口）** |
+| hub 单删 Δ（8 合 1 整体） | — | +0.714 ms |
+| full 基线 | ~4.26 ms | **~3.3 ms**（原始 v1.1.0 ≈5.1） |
+
+冒烟 8 组全过（触发键候选数与模块 yield 精确吻合：V1+2*3、R1234、/uuid、/sanhe、/rq、N20250315、/flypy、/fast）。breakdown.py 适配 hub 结构（no_tr_hub 单删变体、组删=3 注册项）。
+
+**已知注意点与遗留**：hub 的 V 前缀门为字面量，用户改 calculator recognizer 前缀需同步调整（配置耦合，hub 头注释已写明）；同轮 no_tr_super_symbols Δ=+1.099 与批次 1 轮的 -0.035 存在跨轮矛盾——GC 压力归因非线性，以总账（full 基线与组删 Δ）为准，后续如需再归因须同轮多复测。
