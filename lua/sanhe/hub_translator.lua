@@ -13,6 +13,8 @@
 --   "/uuid" "/uuidq" "/ulid" "/mima" "/mimas"
 --                                → random_tools + shijian（命令来自 random_tools/* 配置）
 --   "V..."（V 前缀）             → super_calculator
+--   "v..."（小写 v 表达式形态）   → super_calculator（门内裁决：v1+2*3 收，
+--                                  vsj/v1 等双拼拼音形态拒绝，留给拼音翻译器）
 --   "R..."（R 前缀）             → number_conversion
 --   "U..."（U 前缀，或段带 unicode tag）
 --                                → unicode_conversion.T（P 处理器仍单独注册，不动）
@@ -91,8 +93,10 @@ end
 local function func(input, seg, env)
     local first = input:sub(1, 1)
 
-    -- V/R/U/N 四个单字符前缀：对应模块独占触发面，直接分发
-    if first == "V" then
+    -- V/v 前缀：大写直进；小写仅「表达式形态」由 super_calculator 门内裁决放行
+    -- （双拼下 v 是合法声母 zh，v1+2*3 之类绝不可能是双拼码；纯拼音形态
+    --  如 vsj、v1 在门内被拒绝，候选原样留给拼音翻译器）
+    if first == "V" or first == "v" then
         return super_calculator.func(input, seg, env)
     end
     if first == "R" then

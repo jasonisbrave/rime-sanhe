@@ -114,11 +114,31 @@ function T.init(env)
     env.name_space = env.name_space:gsub('^*', '')
     local _calc_pat = config:get_string("recognizer/patterns/calculator") or nil
     T.prefix = _calc_pat and _calc_pat:match("%^.?([a-zA-Z/=]+).*") or "V"
+    T.prefix_lower = T.prefix:lower()
     T.tips = config:get_string("calculator/tips") or "计算器"
 end
 
 local function startsWith(str, start)
     return string.sub(str, 1, string.len(start)) == start
+end
+
+-- 触发判定（v1.2.0 批次 2 修复：小写引导的双拼表达式，如小鹤双拼下输入 v1+2*3）。
+-- 双拼下小写 v 是合法声母（zh），纯拼音形态必须放行给拼音翻译器，只有
+-- 「绝不可能是双拼码」的形态才收进计算器：
+--   * 引导符后紧跟算符/括号/小数点/等号（双拼码只含字母与末尾声调数字）
+--   * 引导符后连续两位数字（双拼 v+单数字是带调声母，如 v1=zh+一声；
+--     连续数字无法切分双拼音节，如 v12、v1+2*3 中的 v12 段）
+local function is_calc_input(input)
+    if startsWith(input, T.prefix) then
+        return true
+    end
+    if T.prefix ~= T.prefix_lower and startsWith(input, T.prefix_lower) then
+        local rest = input:sub(#T.prefix_lower + 1)
+        if rest:match("^[%+%-%*/^%%!%(%)%.=]") or rest:match("^%d%d") then
+            return true
+        end
+    end
+    return false
 end
 
 -- 函数表
@@ -3355,11 +3375,20 @@ function T.func(input, seg, env)
     local composition = env.engine.context.composition
     if composition:empty() then return end
     local segment = composition:back()
-    if startsWith(input, T.prefix) or (seg:has_tag("calculator")) then
+    if is_calc_input(input) or (seg:has_tag("calculator")) then
         segment.prompt = "〔" .. T.tips .. "〕"
         segment.tags = segment.tags + Set({ "calculator" })
-        -- 提取算式
-        local express = input:gsub(T.prefix, ""):gsub("^/vs", "")
+        -- 提取算式（只剥离开头的引导符：大写前缀 / 小写前缀 / 兼容 /vs 形态；
+        -- 不用 gsub 全串替换，避免误剥算式内的小写字母，如 V2*v 中的 v）
+        local express
+        if startsWith(input, T.prefix) then
+            express = input:sub(#T.prefix + 1)
+        elseif startsWith(input, T.prefix_lower) then
+            express = input:sub(#T.prefix_lower + 1)
+        else
+            express = input
+        end
+        express = express:gsub("^/vs", "")
 
         local code = replaceToFactorial(express)
         local loaded_func, load_error = load("return " .. code, "calculate", "t", calc_methods)
