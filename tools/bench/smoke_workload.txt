@@ -39,10 +39,13 @@ type v.5
 key escape
 type v(1+2)
 key escape
-# 算式内含小写字母变量：V2*v 的 v 不得被误剥（= 2v 数值 2）
-type V2*v
+# 算式内含小写字母常量：V2*e 的 e 不得被误剥（calc_methods 有 e=math.exp(1)，
+# 预期值 2*e ≈ 5.436563656918；v 不在常量表，V2*v 是执行错误，不作用例）
+type V2*e
 key escape
-# 双拼拼音形态零干扰：vsj（zh+ui）应出拼音候选，不进计算器
+# 双拼拼音形态零干扰：默认全拼工作区下 vsj 只能验证「不进计算器态」
+# （preedit 无〔计算器〕）；双拼下拼音候选零干扰需 flypy 工作区验证，
+# 方法见此前诊断（bench.py --repo 指向 flypy custom 的临时副本）
 type vsj
 key escape
 # 裸 v+单数字：schema recognizer 打 calculator tag → 进计算器（选词/声调让位）

@@ -185,7 +185,7 @@ v1.1.0 已于 2026-11-19 发布（GitHub Release + CI 通过），组件分解�
 4. input_statistics 惰性化后残余 **+0.39ms/键是 C++ 层每翻译器段查询的固定入口开销**，lua 侧无法消除——这是批次 2 hub 合并（减少翻译器注册数量）的直接理论依据
 5. 同轮实测其余入口成本大户：set_profile +1.273、super_calculator +0.637、shijian +0.614、number_conversion +0.603
 
-**改动**：`super_symbols.lua`（惰性加载 + tag 早退）、`input_statistics.lua`（计数内存累积，每 50 次提交或查询时批量落库、fini 兜底 flush；崩溃最多丢一个窗口计数，换取日常输入零统计写库 I/O）、`tools/bench/smoke_workload.txt`（功能冒烟负载）。
+**改动**：`super_symbols.lua`（惰性加载 + tag 早退）、`input_statistics.lua`（计数内存累积，每 50 次提交或查询时批量落库、fini 兜底 flush；写库正常时崩溃最多丢一个窗口计数——LevelDb 持续写失败时失败键跨窗口累积直至恢复，换取日常输入零统计写库 I/O）、`tools/bench/smoke_workload.txt`（功能冒烟负载）。
 
 **复测**（交错基线协议）：
 
@@ -200,7 +200,7 @@ v1.1.0 已于 2026-11-19 发布（GitHub Release + CI 通过），组件分解�
 
 ### 十一、v1.2.0 批次 2：hub 合并 8 翻译器（2026-11-21）
 
-- 新增 `lua/sanhe/hub_translator.lua`：8 个 trigger 型翻译器（日期时间/计算器/随机工具/版本/切方案/切档位/unicode/数字大写）收进单一入口，按输入形态 O(1) 分发（V/R/U/N 前缀独占、精确命令表、shijian 宽门兜底），**未命中路由的常规输入不再逐一进入这 8 个翻译器**。触发条件全部从各模块源码逐一核对，8 个目标模块源码零改动
+- 新增 `lua/sanhe/hub_translator.lua`：8 个 trigger 型翻译器（日期时间/计算器/随机工具/版本/切方案/切档位/unicode/数字大写）收进单一入口，**按改造前的原注册顺序逐模块判定触发条件**（精确命令 / recognizer tag / 前缀 / shijian 宽门；重叠输入多模块按序都调，与原 8 注册行为等价），常规拼音输入不命中任何触发条件、零模块调用。触发条件全部从各模块源码逐一核对，8 个目标模块源码零改动
 - schema：engine/translators 8 行注册 → 1 行 hub 注册；super_symbols、input_statistics 保持独立
 - init 复用各模块自身 init（random_tools/super_calculator/unicode.T 依赖 env 状态），fini 对应清理
 - **保守取舍**：精确斜杠命令同时调「精确模块 + shijian」（原注册下 shijian 本就会被调到，保持 segment.tags 与候选顺序逐字节一致），代价仅宽门内多一次 lua 调用
