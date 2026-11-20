@@ -6,6 +6,9 @@
 --    每 FLUSH_EVERY_COMMITS 次上屏、或触发统计查询时（取先到者）一次性批量写库。
 -- 2. 崩溃/强杀最多丢失一个 flush 窗口内的计数（约 50 次上屏的量级），
 --    对输入统计数据而言可接受；换取日常输入零统计写库 I/O。
+--    此前提是写库功能正常：若 LevelDb 持续写失败（磁盘满/库损坏等），失败键
+--    会一直保留在内存队列中跨窗口累积，pending_writes 无上限，直到某次 flush
+--    成功或进程退出（fini 时也会尽力 flush 一次）。
 -- 3. 读取保持惰性：仅 /btj /rtj /ztj /ytj /ntj /tj /htj 查询触发时才扫库聚合；
 --    查询前先 flush 内存计数，保证报表数字与逐笔写库口径完全一致。
 -- 4. fini（方案卸载/会话结束）时也会 flush，正常退出不丢数据。
@@ -267,6 +270,8 @@ end
 
 -- 批量把内存计数写入统计库：每个键读当前库值后累加，与逐笔写库口径一致。
 -- 已写成功的键立即出队；失败的键保留在队列中供下次 flush 重试。
+-- 返回 false 表示本次仍有未写成的键（db 不可用或中途 update 失败）；
+-- 只要本轮发生过任何成功写入，无论结局如何都释放报表读视图。
 local function flush_pending_writes(env)
     local pending = env.pending_writes
     if not pending then return true end
@@ -284,17 +289,28 @@ local function flush_pending_writes(env)
         return false
     end
 
+    local wrote_any = false
     for raw_key, amount in pairs(pending) do
         local value = to_integer(parse_tail(db:fetch(raw_key)) + amount)
         if not db:update(raw_key, string.format("c=%d d=0 t=0", value)) then
             env.stats_db_error = true
+            -- 部分写入已成功：读视图仍已过期，失败路径同样要释放。
+            if wrote_any then
+                release_read_accessor(env)
+            end
             return false
         end
         pending[raw_key] = nil
+        wrote_any = true
     end
 
-    -- DbAccessor 是写入前的读视图；任何统计写入成功后都让报表 accessor 失效。
-    release_read_accessor(env)
+    if wrote_any then
+        -- DbAccessor 是写入前的读视图；任何统计写入成功后都让报表 accessor 失效。
+        release_read_accessor(env)
+        -- 本轮全部写成功：清除历史写库错误标记，避免空报表持续误报
+        -- 「数据库打开失败」。
+        env.stats_db_error = nil
+    end
     return true
 end
 

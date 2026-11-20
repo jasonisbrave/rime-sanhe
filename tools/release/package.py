@@ -41,8 +41,8 @@ def should_exclude(rel: Path) -> bool:
         return True
     # tools/bench 下的运行产物
     if top == "tools" and len(parts) >= 2 and parts[1] == "bench":
-        if len(parts) >= 3 and parts[2] in ("ws", "results", "results_smoke",
-                                            "results_smoke_baseline"):
+        if len(parts) >= 3 and (parts[2] in ("ws", "results")
+                                or parts[2].startswith("results_smoke")):
             return True
     # 通用排除
     if rel.suffix in (".log", ".pyc"):

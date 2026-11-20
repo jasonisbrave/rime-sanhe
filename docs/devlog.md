@@ -200,7 +200,7 @@ v1.1.0 已于 2026-11-19 发布（GitHub Release + CI 通过），组件分解�
 
 ### 十一、v1.2.0 批次 2：hub 合并 8 翻译器（2026-11-21）
 
-- 新增 `lua/sanhe/hub_translator.lua`：8 个 trigger 型翻译器（日期时间/计算器/随机工具/版本/切方案/切档位/unicode/数字大写）收进单一入口，按输入形态 O(1) 分发（V/R/U/N 前缀独占、精确命令表、shijian 宽门兜底），**普通拼音输入零模块调用**。触发条件全部从各模块源码逐一核对，8 个目标模块源码零改动
+- 新增 `lua/sanhe/hub_translator.lua`：8 个 trigger 型翻译器（日期时间/计算器/随机工具/版本/切方案/切档位/unicode/数字大写）收进单一入口，按输入形态 O(1) 分发（V/R/U/N 前缀独占、精确命令表、shijian 宽门兜底），**未命中路由的常规输入不再逐一进入这 8 个翻译器**。触发条件全部从各模块源码逐一核对，8 个目标模块源码零改动
 - schema：engine/translators 8 行注册 → 1 行 hub 注册；super_symbols、input_statistics 保持独立
 - init 复用各模块自身 init（random_tools/super_calculator/unicode.T 依赖 env 状态），fini 对应清理
 - **保守取舍**：精确斜杠命令同时调「精确模块 + shijian」（原注册下 shijian 本就会被调到，保持 segment.tags 与候选顺序逐字节一致），代价仅宽门内多一次 lua 调用
@@ -219,6 +219,6 @@ v1.1.0 已于 2026-11-19 发布（GitHub Release + CI 通过），组件分解�
 
 ### 十二、计算器双拼修复与 v1.2.0 发版（2026-11-21）
 
-**真机反馈闭环**：用户双拼下计算器不可用。复现矩阵（双拼×hub / 全拼×hub / 双拼×pre-hub）证实为**既有缺陷而非 hub 回归**：recognizer `^V.*$`、super_calculator 前缀门、super_processor 数字功能码判定三层均硬编码大写 V——双拼下小写 v 是合法声母（zh），表达式被拼音流消费且数字触发选词上屏。修复三件套：schema pattern 增小写表达式分支、super_calculator `is_calc_input` 门（两位数字起，v+单数字留拼音流）、hub 路由 v 前缀；附带修掉原 `gsub` 全串剥离会误剥算式内字母 v 的隐患。已知取舍（文档化）：双拼下裸 v+数字现归计算器缓冲，原选词/声调键行为让位——`v1+2*3` 形态必需此判定。双拼/全拼矩阵、10 组冒烟、交错基线（no_tr_hub +0.595、组删 +0.972）全部通过，真机验证通过。
+**真机反馈闭环**：用户双拼下计算器不可用。复现矩阵（双拼×hub / 全拼×hub / 双拼×pre-hub）证实为**既有缺陷而非 hub 回归**：recognizer `^V.*$`、super_calculator 前缀门、super_processor 数字功能码判定三层均硬编码大写 V——双拼下小写 v 是合法声母（zh），表达式被拼音流消费且数字触发选词上屏。修复三件套：schema pattern 增小写表达式分支、super_calculator `is_calc_input` 门（门内两数字规则仅影响无 tag 路径）、hub 路由 v 前缀；附带修掉原 `gsub` 全串剥离会误剥算式内字母 v 的隐患。已知取舍（文档化）：schema pattern 使裸 v+数字拿到 calculator tag 进入计算器（双拼下原选词/声调键行为让位，Esc 可退出）——`v1+2*3` 形态必需此判定。双拼/全拼矩阵、10 组冒烟、交错基线（no_tr_hub +0.595、组删 +0.972）全部通过，真机验证通过。
 
 **v1.2.0 总账**：每键延迟 5.1ms（v1.1.0）→ ~3.3ms（-35%）；方法学沉淀——交错基线测量协议、组件成本分解工具、功能冒烟负载，后续任何性能改动都有量化闭环。

@@ -31,6 +31,23 @@ key space
 # 超级计算器：V 前缀表达式，末键后应有计算结果候选（如 7）
 type V1+2*3
 key escape
+# 小写表达式形态（双拼友好）：v 后紧跟算符/数字 → 计算器态
+type v1+2*3
+key escape
+# v 后紧跟小数点/括号 → 计算器态（v.5 = 0.5、v(1+2) = 3）
+type v.5
+key escape
+type v(1+2)
+key escape
+# 算式内含小写字母变量：V2*v 的 v 不得被误剥（= 2v 数值 2）
+type V2*v
+key escape
+# 双拼拼音形态零干扰：vsj（zh+ui）应出拼音候选，不进计算器
+type vsj
+key escape
+# 裸 v+单数字：schema recognizer 打 calculator tag → 进计算器（选词/声调让位）
+type v1
+key escape
 
 # @tag smoke_hub_number
 # 数字金额大写：R 前缀，末键后应有大写候选（壹仟贰佰叁拾肆）
@@ -47,7 +64,7 @@ type /mimas
 key escape
 
 # @tag smoke_hub_version
-# 版本显示：/sanhe → 「三合输入法 v1.1.0」等候选
+# 版本显示：/sanhe → 「三合输入法 v1.2.0」等候选
 type /sanhe
 key escape
 

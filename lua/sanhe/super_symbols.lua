@@ -646,10 +646,16 @@ end
 local function on_context_update(env, context)
     local input = context and context.input or ""
 
-    -- v1.2.0：普通拼音键早退。符号态维护只在 / 前缀输入下才有意义；
-    -- 非 / 输入只需摘掉可能残留的 super_symbol 标签（用户删掉了 "/" 的情形），
-    -- 自动补全链路整体跳过。
-    if input:sub(1, 1) ~= "/" then
+    -- v1.2.0：普通拼音键早退。符号态维护只在符号前缀输入下才有意义；
+    -- 前缀取自配置项（super_symbols/prefix_sym、prefix_emoji），不再写死 "/"，
+    -- 自定义非斜杠前缀时 autofill 链路同样生效。
+    -- 不匹配任一前缀的输入只需摘掉可能残留的 super_symbol 标签（用户删掉了
+    -- 前缀符的情形），自动补全链路整体跳过；前缀判断是 O(1) 子串比较，
+    -- 普通输入无感知。
+    local runtime = get_runtime(env)
+    local is_symbol_input = input:sub(1, #runtime.sym_prefix) == runtime.sym_prefix
+        or input:sub(1, #runtime.emoji_prefix) == runtime.emoji_prefix
+    if not is_symbol_input then
         env.super_symbols_last_input = input
         env.super_symbols_autofill_target = nil
         env.super_symbols_autofill_suppressed_input = nil
